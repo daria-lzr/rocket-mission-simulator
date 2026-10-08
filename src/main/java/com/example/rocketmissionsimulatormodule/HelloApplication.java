@@ -1,4 +1,5 @@
 package com.example.rocketmissionsimulatormodule;
+import javafx.scene.layout.BorderPane;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -10,9 +11,10 @@ import java.io.IOException;
 public class HelloApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("hello-view.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 320, 240);
-        stage.setTitle("Hello!");
+
+        BorderPane mainPane = new BorderPane();
+        Scene scene = new Scene(mainPane, 1200, 750);
+        stage.setTitle("Rocket Mission Simulator");
         stage.setScene(scene);
         stage.show();
     }

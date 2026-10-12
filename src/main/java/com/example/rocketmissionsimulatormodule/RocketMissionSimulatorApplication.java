@@ -31,8 +31,6 @@ public class RocketMissionSimulatorApplication extends Application {
     private double altitudeMeters = 0.0;
     private double velocityMetersPerSecond = 0.0;
 
-    private double rocketLiftPixels = 0.0;
-
     @Override
     public void start(Stage stage) {
         BorderPane mainPane = new BorderPane();

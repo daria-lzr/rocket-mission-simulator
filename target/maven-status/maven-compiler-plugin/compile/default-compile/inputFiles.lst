@@ -1,3 +1,8 @@
 /Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/com/example/rocketmissionsimulatormodule/Launcher.java
+/Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/com/example/rocketmissionsimulatormodule/Mission.java
 /Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/com/example/rocketmissionsimulatormodule/RocketMissionSimulatorApplication.java
+/Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/com/example/rocketmissionsimulatormodule/view/MissionLogPane.java
+/Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/com/example/rocketmissionsimulatormodule/view/MissionPane.java
+/Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/com/example/rocketmissionsimulatormodule/view/SimulationPane.java
+/Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/com/example/rocketmissionsimulatormodule/view/TelemetryPane.java
 /Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/module-info.java

@@ -1,6 +1,5 @@
 package com.example.rocketmissionsimulatormodule;
 
-import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -12,7 +11,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.scene.control.Button;
 
 import java.net.URL;
 import java.util.Objects;
@@ -20,16 +18,6 @@ import java.util.Objects;
 public class RocketMissionSimulatorApplication extends Application {
 
     private static final Insets COMMON_INSETS = new Insets(15);
-    Mission mission = new Mission();
-    private ImageView background1;
-    private ImageView background2;
-    private AnimationTimer backgroundAnimation;
-
-    private Label altitudeLabel;
-    private Label velocityLabel;
-
-    private double altitudeMeters = 0.0;
-    private double velocityMetersPerSecond = 0.0;
 
     @Override
     public void start(Stage stage) {
@@ -51,106 +39,16 @@ public class RocketMissionSimulatorApplication extends Application {
         stage.show();
     }
 
-    private void updateFlight(double elapsedSeconds) {
-        double acceleration = 20.0; // m/s^2
-
-        altitudeMeters +=
-                velocityMetersPerSecond * elapsedSeconds + 0.5 * acceleration  * elapsedSeconds * elapsedSeconds;
-        velocityMetersPerSecond += acceleration * elapsedSeconds;
-
-        altitudeLabel.setText(
-                String.format("Altitude: %.3f km", altitudeMeters / 1000.0)
-        );
-
-        velocityLabel.setText(
-                String.format("Velocity: %.1f m/s", velocityMetersPerSecond)
-        );
-    }
-
-    private void createBackgroundAnimation(Pane simulationPane) {
-        backgroundAnimation = new AnimationTimer() {
-            private long lastUpdate = 0;
-            private boolean initialized = false;
-            @Override
-            public void handle(long now) {
-                double height = simulationPane.getHeight();
-
-                if (height <= 0){
-                    return;
-                }
-
-                if (!initialized) {
-                    background1.setLayoutY(0);
-                    background2.setLayoutY(-height);
-
-                    initialized = true;
-                    lastUpdate = now;
-                    return;
-                }
-
-                double elapsedSeconds =
-                        (now - lastUpdate) / 1_000_000_000.0;
-
-                lastUpdate = now;
-
-                elapsedSeconds = Math.min(elapsedSeconds, 0.05);
-
-                updateFlight(elapsedSeconds);
-
-                double speed = Math.min(
-                        160.0,
-                        35.0 * velocityMetersPerSecond * 0.04
-                );
-
-                double distance = speed * elapsedSeconds;
-
-                background1.setLayoutY(
-                        background1.getLayoutY() + distance
-                );
-                background2.setLayoutY(
-                        background2.getLayoutY() + distance
-                );
-
-                if(background1.getLayoutY() >= height) {
-                    background1.setLayoutY(
-                            background2.getLayoutY() - height
-                    );
-                }
-
-                if(background2.getLayoutY() >= height) {
-                    background2.setLayoutY(
-                            background1.getLayoutY() - height
-                    );
-                }
-            }
-        };
-    }
-
     private Pane createSimulationPane() {
         Pane simulationPane = new Pane();
         simulationPane.setPrefSize(800, 500);
-        simulationPane.setStyle("-fx-background-color: #101D35;");
-
-        URL backgroundUrl = Objects.requireNonNull(
-                getClass().getResource("/images/starfield.png"),
-                "Space Background Image Not Found"
-        );
-
-        Image backgroundImage = new Image(backgroundUrl.toExternalForm());
-
-        background1 = new ImageView(backgroundImage);
-        background2 = new ImageView(backgroundImage);
-
-        for(ImageView background : new ImageView[]{background1, background2}) {
-            background.setPreserveRatio(false);
-            background.fitWidthProperty().bind(simulationPane.widthProperty());
-            background.fitHeightProperty().bind(simulationPane.heightProperty());
-            background.setMouseTransparent(true);
-        }
-
-        simulationPane.getChildren().addAll(
-                background1,
-                background2
+        simulationPane.setStyle(
+                "-fx-background-color: linear-gradient("
+                        + "to bottom, "
+                        + "#529BE8 0%, "
+                        + "#87C4F5 65%, "
+                        + "#C5E5FF 100%"
+                        + ");"
         );
 
         URL starshipImageURL = Objects.requireNonNull(
@@ -158,27 +56,50 @@ public class RocketMissionSimulatorApplication extends Application {
                 "Starship image resource not found"
         );
         Image starshipImage = new Image(starshipImageURL.toExternalForm());
-        ImageView imageView = new ImageView(starshipImage);
+        ImageView starshipView = new ImageView(starshipImage);
 
-        imageView.setPreserveRatio(true);
-        imageView.setFitHeight(250);
+        starshipView.setPreserveRatio(true);
+        starshipView.setFitHeight(250);
 
         //Center the rocket horizontally
-        imageView.layoutXProperty().bind(
+        starshipView.layoutXProperty().bind(
                 simulationPane.widthProperty()
-                        .subtract(imageView.getBoundsInLocal().getWidth())
+                        .subtract(starshipView.getBoundsInLocal().getWidth())
                         .divide(2)
         );
 
         //Position the rocket 20 pixels above the bottom
-        imageView.layoutYProperty().bind(
+        starshipView.layoutYProperty().bind(
                 simulationPane.heightProperty()
-                        .subtract(imageView.getBoundsInLocal().getHeight())
-                        .subtract(20)
+                        .subtract(70)
+                        .subtract(starshipView.getBoundsInLocal().getHeight())
         );
 
-        simulationPane.getChildren().add(imageView);
-        createBackgroundAnimation(simulationPane);
+        URL groungImageURL = Objects.requireNonNull(
+                getClass().getResource("/images/ground.png"),
+                "Ground image resource not found"
+        );
+
+        Image groundImage = new Image(groungImageURL.toExternalForm());
+        ImageView groundView = new ImageView(groundImage);
+
+        groundView.setFitHeight(70);
+        groundView.setPreserveRatio(false);
+
+
+        //make ground as wide as simulation pane
+        groundView.fitWidthProperty().bind(
+                simulationPane.widthProperty()
+        );
+
+        //calculates vertical position of ground
+        groundView.layoutYProperty().bind(
+                simulationPane.heightProperty().subtract(70)
+        );
+
+
+
+        simulationPane.getChildren().addAll(groundView, starshipView);
         return simulationPane;
     }
 
@@ -202,8 +123,8 @@ public class RocketMissionSimulatorApplication extends Application {
         telemetryVBox.setStyle("-fx-background-color: #E2E8F0;");
 
         Label telemetryTitle = new Label("Telemetry");
-        altitudeLabel = new Label("Altitude: 0.000 km");
-        velocityLabel = new Label("Velocity: 0.0 m/s");
+        Label altitudeLabel = new Label("Altitude: 0 km");
+        Label velocityLabel = new Label("Velocity: 0 m/s");
         Label fuelLabel = new Label("Fuel: 100%");
         Label throttleLabel = new Label("Throttle: 0%");
         Label orientationLabel = new Label("Orientation: 0°");
@@ -227,27 +148,15 @@ public class RocketMissionSimulatorApplication extends Application {
         missionVBox.setStyle("-fx-background-color: #FCE8D5;");
 
         Label missionTitle = new Label("Mission / Events");
-        Label statusLabel = new Label("Status: " + mission.getState().getStateName());
+        Label statusLabel = new Label("Status: Pre-launch");
         Label activeEventLabel = new Label("Active Event: None");
         Label objectiveLabel = new Label("Objective: Deploy satellite");
-
-        Button launchButton = new Button("Launch Mission");
-
-        launchButton.setOnAction(event -> {
-            if (mission.getState() == Mission.MissionStates.PRE_LAUNCH){
-                mission.updateState(Mission.MissionStates.ASCENT);
-                statusLabel.setText("Status: " + mission.getState().getStateName());
-                launchButton.setDisable(true);
-                backgroundAnimation.start();
-            }
-        });
 
         missionVBox.getChildren().addAll(
                 missionTitle,
                 statusLabel,
                 activeEventLabel,
-                objectiveLabel,
-                launchButton
+                objectiveLabel
         );
 
         return missionVBox;

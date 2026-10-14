@@ -21,4 +21,12 @@ public class Mission {
     public MissionState getCurrentState() {
         return currentState;
     }
+
+
+    public void launch(){
+        if(currentState == MissionState.PRE_LAUNCH){
+            currentState = MissionState.ASCENT;
+        }
+
+    }
 }

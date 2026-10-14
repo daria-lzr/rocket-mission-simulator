@@ -18,11 +18,13 @@ public class RocketMissionSimulatorApplication extends Application {
 
     @Override
     public void start(Stage stage) {
+         Mission mission = new Mission();
+
         BorderPane mainPane = new BorderPane();
 
 
         SimulationPane simulationPane = new SimulationPane();
-        VBox rightVBox = createRightSidebar();
+        VBox rightVBox = createRightSidebar(mission);
         MissionLogPane missionLogPane = new MissionLogPane();
 
         //assemble  main layout
@@ -38,14 +40,14 @@ public class RocketMissionSimulatorApplication extends Application {
 
 
 
-    private static VBox createRightSidebar() {
+    private static VBox createRightSidebar(Mission mission) {
         VBox rightVBox = new VBox();
         rightVBox.setSpacing(10);
         rightVBox.setPrefWidth(280);
 
         rightVBox.getChildren().addAll(
                 new TelemetryPane(),
-                new MissionPane()
+                new MissionPane(mission)
         );
 
         return rightVBox;

@@ -1,19 +1,42 @@
 
 package com.example.rocketmissionsimulatormodule.view;
 
+import com.example.rocketmissionsimulatormodule.Mission;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
+import javafx.scene.control.Button;
+
+
 
 public class MissionPane extends VBox {
+    private Mission mission = new Mission();
+    private Button launchButton;
+    private Label statusLabel;
 
-    public MissionPane() {
+    public MissionPane(Mission mission) {
+        this.mission = mission;
+
+        launchButton = new Button("Launch");
+        launchButton.setPrefWidth(240);
+        launchButton.setPrefHeight(45);
+        launchButton.setMinHeight(40);
+        launchButton.setDisable(false);
+
+        launchButton.setOnAction(event -> {
+            this.mission.launch();
+            statusLabel.setText("Status: " + mission.getCurrentState().toString());
+            launchButton.setDisable(true);
+        });
+
+
+
         setPadding(new Insets(15));
         setSpacing(10);
         setStyle("-fx-background-color: #FCE8D5;");
 
         Label missionTitle = new Label("Mission / Events");
-        Label statusLabel = new Label("Status: Pre-launch");
+        statusLabel = new Label("Status: " + mission.getCurrentState().toString());
         Label activeEventLabel = new Label("Active Event: None");
         Label objectiveLabel = new Label("Objective: Deploy satellite");
 
@@ -21,7 +44,8 @@ public class MissionPane extends VBox {
                 missionTitle,
                 statusLabel,
                 activeEventLabel,
-                objectiveLabel
+                objectiveLabel,
+                launchButton
         );
     }
 }

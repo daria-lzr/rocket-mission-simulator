@@ -9,6 +9,7 @@ import java.net.URL;
 import java.util.Objects;
 
 public class SimulationPane extends Pane {
+    private ImageView starshipView;
 
     public SimulationPane() {
         setPrefSize(800, 500);
@@ -28,7 +29,7 @@ public class SimulationPane extends Pane {
         );
 
         Image starshipImage = new Image(starshipImageURL.toExternalForm());
-        ImageView starshipView = new ImageView(starshipImage);
+        starshipView = new ImageView(starshipImage);
 
         starshipView.setPreserveRatio(true);
         starshipView.setFitHeight(250);
@@ -65,5 +66,15 @@ public class SimulationPane extends Pane {
         );
 
         getChildren().addAll(groundView, starshipView);
+    }
+
+
+
+    public void updateRocketPosition(double altitude) {
+        double pixelsPerMeter = 0.1;
+
+        double verticalDisplacement = altitude * pixelsPerMeter;
+
+        starshipView.setTranslateY(-verticalDisplacement);
     }
 }

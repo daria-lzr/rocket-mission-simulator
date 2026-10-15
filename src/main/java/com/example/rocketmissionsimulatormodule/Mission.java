@@ -1,6 +1,10 @@
 package com.example.rocketmissionsimulatormodule;
 
+
+
 public class Mission {
+
+    private final Rocket rocket;
 
     public enum MissionState {
         PRE_LAUNCH,
@@ -16,6 +20,7 @@ public class Mission {
 
     public Mission() {
         this.currentState = MissionState.PRE_LAUNCH;
+        this.rocket = new Rocket();
     }
 
     public MissionState getCurrentState() {
@@ -28,5 +33,9 @@ public class Mission {
             currentState = MissionState.ASCENT;
         }
 
+    }
+
+    public Rocket getRocket() {
+        return rocket;
     }
 }

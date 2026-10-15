@@ -10,9 +10,10 @@ import javafx.scene.control.Button;
 
 
 public class MissionPane extends VBox {
-    private Mission mission = new Mission();
+    private Mission mission;
     private Button launchButton;
     private Label statusLabel;
+    private Runnable onLaunch;
 
     public MissionPane(Mission mission) {
         this.mission = mission;
@@ -25,8 +26,13 @@ public class MissionPane extends VBox {
 
         launchButton.setOnAction(event -> {
             this.mission.launch();
+
             statusLabel.setText("Status: " + mission.getCurrentState().toString());
             launchButton.setDisable(true);
+
+            if (onLaunch != null) {//avoid NullPointerException if onLaunch callback was not set
+                onLaunch.run();
+            }
         });
 
 
@@ -47,5 +53,9 @@ public class MissionPane extends VBox {
                 objectiveLabel,
                 launchButton
         );
+    }
+
+    public void setOnLaunch(Runnable onLaunch) {
+        this.onLaunch = onLaunch;
     }
 }

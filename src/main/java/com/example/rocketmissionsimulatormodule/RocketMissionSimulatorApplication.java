@@ -6,7 +6,6 @@ import com.example.rocketmissionsimulatormodule.view.SimulationPane;
 import com.example.rocketmissionsimulatormodule.view.TelemetryPane;
 
 import javafx.application.Application;
-import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
@@ -18,13 +17,24 @@ public class RocketMissionSimulatorApplication extends Application {
 
     @Override
     public void start(Stage stage) {
-         Mission mission = new Mission();
+        Mission mission = new Mission();
+        MissionPane missionPane = new MissionPane(mission);
+        TelemetryPane telemetryPane = new TelemetryPane();
+        SimulationPane simulationPane = new SimulationPane();
+
+        MissionController missionController = new MissionController(mission, telemetryPane, simulationPane);
+
+        missionPane.setOnLaunch(() -> {
+            missionController.startSimulation();
+        });
+
+
 
         BorderPane mainPane = new BorderPane();
 
 
-        SimulationPane simulationPane = new SimulationPane();
-        VBox rightVBox = createRightSidebar(mission);
+
+        VBox rightVBox = createRightSidebar(missionPane, telemetryPane);
         MissionLogPane missionLogPane = new MissionLogPane();
 
         //assemble  main layout
@@ -40,14 +50,14 @@ public class RocketMissionSimulatorApplication extends Application {
 
 
 
-    private static VBox createRightSidebar(Mission mission) {
+    private static VBox createRightSidebar(MissionPane missionPane, TelemetryPane telemetryPane) {
         VBox rightVBox = new VBox();
         rightVBox.setSpacing(10);
         rightVBox.setPrefWidth(280);
 
         rightVBox.getChildren().addAll(
-                new TelemetryPane(),
-                new MissionPane(mission)
+                telemetryPane,
+                missionPane
         );
 
         return rightVBox;

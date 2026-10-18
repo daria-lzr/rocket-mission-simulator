@@ -58,4 +58,11 @@ public class MissionPane extends VBox {
     public void setOnLaunch(Runnable onLaunch) {
         this.onLaunch = onLaunch;
     }
+
+
+
+    public void updateMissionStatus() {
+        statusLabel.setText("Status: " + mission.getCurrentState());
+    }
+
 }

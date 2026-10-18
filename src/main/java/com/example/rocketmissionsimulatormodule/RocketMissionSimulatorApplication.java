@@ -24,7 +24,7 @@ public class RocketMissionSimulatorApplication extends Application {
         TelemetryPane telemetryPane = new TelemetryPane();
         SimulationPane simulationPane = new SimulationPane();
 
-        MissionController missionController = new MissionController(mission, telemetryPane, simulationPane);
+        MissionController missionController = new MissionController(mission, telemetryPane, simulationPane, missionPane);
 
         missionPane.setOnLaunch(() -> {
             missionController.startSimulation();

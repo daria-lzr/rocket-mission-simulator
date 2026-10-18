@@ -1,5 +1,6 @@
 package com.example.rocketmissionsimulatormodule.util;
 
+import com.example.rocketmissionsimulatormodule.view.MissionPane;
 import com.example.rocketmissionsimulatormodule.view.SimulationPane;
 import com.example.rocketmissionsimulatormodule.view.TelemetryPane;
 
@@ -17,21 +18,21 @@ public class MissionController {
     private final Mission mission;
     private final TelemetryPane telemetryPane;
     private final SimulationPane simulationPane;
+    private final MissionPane missionPane;
 
     private final ScheduledExecutorService executor =
             Executors.newSingleThreadScheduledExecutor();
 
     private ScheduledFuture<?> simulationTask;
 
-    public MissionController(Mission mission, TelemetryPane telemetryPane, SimulationPane simulationPane) {
+
+    public MissionController(Mission mission, TelemetryPane telemetryPane, SimulationPane simulationPane, MissionPane missionPane) {
         this.mission = mission;
         this.telemetryPane = telemetryPane;
         this.simulationPane = simulationPane;
-
-
-
-
+        this.missionPane = missionPane;
     }
+
 
 
 
@@ -42,20 +43,25 @@ public class MissionController {
             double altitude = mission.getRocket().getAltitude();
             double velocity = mission.getRocket().getVelocity();
 
+            boolean orbitReached = mission.checkOrbitReached();
+
+            if (orbitReached) {
+                stopSimulation();
+            }
+
             /** use this cause JavaFX is not designed to allow multiple threads to modify its GUI simultaneously
              * it submits the update to the JavaFX Application Thread
-             * bacause JavaFX modifies the GUI solely though its designated thread
+             * because JavaFX modifies the GUI solely though its designated thread
              *
              */
             Platform.runLater(() -> {
-                if (mission.getCurrentState() == Mission.MissionState.ASCENT) {
-                    telemetryPane.updateTelemetry(altitude, velocity);
-                    simulationPane.updateRocketPosition(altitude);
-                }
+                telemetryPane.updateTelemetry(altitude, velocity);
+                simulationPane.updateRocketPosition(altitude);
+                missionPane.updateMissionStatus();
             });
         }
-
     }
+
 
 
 

@@ -1,4 +1,4 @@
-package com.example.rocketmissionsimulatormodule;
+package com.example.rocketmissionsimulatormodule.util;
 
 public class Rocket {
 

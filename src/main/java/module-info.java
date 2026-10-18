@@ -5,4 +5,6 @@ module com.example.rocketmissionsimulatormodule {
 
     opens com.example.rocketmissionsimulatormodule to javafx.fxml;
     exports com.example.rocketmissionsimulatormodule;
+    exports com.example.rocketmissionsimulatormodule.util;
+    opens com.example.rocketmissionsimulatormodule.util to javafx.fxml;
 }

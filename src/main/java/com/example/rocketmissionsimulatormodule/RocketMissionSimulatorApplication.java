@@ -1,5 +1,7 @@
 package com.example.rocketmissionsimulatormodule;
 
+import com.example.rocketmissionsimulatormodule.util.Mission;
+import com.example.rocketmissionsimulatormodule.util.MissionController;
 import com.example.rocketmissionsimulatormodule.view.MissionLogPane;
 import com.example.rocketmissionsimulatormodule.view.MissionPane;
 import com.example.rocketmissionsimulatormodule.view.SimulationPane;
@@ -46,6 +48,7 @@ public class RocketMissionSimulatorApplication extends Application {
         stage.setTitle("Rocket Mission Simulator");
         stage.setScene(scene);
         stage.show();
+        stage.setOnCloseRequest(event -> missionController.shutdown());
     }
 
 

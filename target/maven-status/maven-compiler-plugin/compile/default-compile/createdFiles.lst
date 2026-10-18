@@ -1,8 +1,9 @@
 com/example/rocketmissionsimulatormodule/view/MissionPane.class
-com/example/rocketmissionsimulatormodule/Mission$MissionState.class
-com/example/rocketmissionsimulatormodule/Rocket.class
+com/example/rocketmissionsimulatormodule/util/Rocket.class
+com/example/rocketmissionsimulatormodule/util/Mission$MissionState.class
 module-info.class
-com/example/rocketmissionsimulatormodule/MissionController.class
+com/example/rocketmissionsimulatormodule/util/MissionController.class
 com/example/rocketmissionsimulatormodule/view/MissionLogPane.class
 com/example/rocketmissionsimulatormodule/view/TelemetryPane.class
 com/example/rocketmissionsimulatormodule/view/SimulationPane.class
+com/example/rocketmissionsimulatormodule/util/Mission.class

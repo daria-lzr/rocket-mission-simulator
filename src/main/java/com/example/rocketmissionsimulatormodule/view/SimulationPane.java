@@ -34,14 +34,14 @@ public class SimulationPane extends Pane {
         starshipView.setPreserveRatio(true);
         starshipView.setFitHeight(250);
 
-        // Center rocket horizontally
+        //center rocket horizontally
         starshipView.layoutXProperty().bind(
                 widthProperty()
                         .subtract(starshipView.getBoundsInLocal().getWidth())
                         .divide(2)
         );
 
-        // Position rocket above ground
+        //position rocket above ground
         starshipView.layoutYProperty().bind(
                 heightProperty()
                         .subtract(70)
@@ -72,7 +72,6 @@ public class SimulationPane extends Pane {
 
     public void updateRocketPosition(double altitude) {
         double pixelsPerMeter = 0.1;
-
         double verticalDisplacement = altitude * pixelsPerMeter;
 
         starshipView.setTranslateY(-verticalDisplacement);

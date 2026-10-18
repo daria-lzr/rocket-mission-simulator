@@ -1,7 +1,7 @@
 
 package com.example.rocketmissionsimulatormodule.view;
 
-import com.example.rocketmissionsimulatormodule.Mission;
+import com.example.rocketmissionsimulatormodule.util.Mission;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;

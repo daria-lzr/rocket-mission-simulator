@@ -1,5 +1,4 @@
-package com.example.rocketmissionsimulatormodule;
-
+package com.example.rocketmissionsimulatormodule.util;
 
 
 public class Mission {
@@ -16,7 +15,7 @@ public class Mission {
     }
 
 
-    private MissionState currentState;
+    private volatile MissionState currentState;
 
     public Mission() {
         this.currentState = MissionState.PRE_LAUNCH;

@@ -14,6 +14,12 @@ import javafx.util.Duration;
 public class SimulationPane extends Pane {
     private ImageView starshipView;
     private ImageView satelliteView;
+    private ImageView spaceView;
+
+
+    private static final double FADE_START_ALTITUDE = 100;  // 20 km
+    private static final double FADE_END_ALTITUDE = 900;   // 100 km
+
 
     public SimulationPane() {
         setPrefSize(800, 500);
@@ -26,6 +32,23 @@ public class SimulationPane extends Pane {
                         + "#C5E5FF 100%"
                         + ");"
         );
+
+
+
+        URL spaceImageURL = Objects.requireNonNull(
+                getClass().getResource("/images/space.png"),
+                "Space image resource not found"
+        );
+
+        Image spaceImage = new Image(spaceImageURL.toExternalForm());
+        spaceView = new ImageView(spaceImage);
+
+        spaceView.setPreserveRatio(false);
+        spaceView.setOpacity(0);
+
+        spaceView.fitWidthProperty().bind(widthProperty());
+        spaceView.fitHeightProperty().bind(heightProperty());
+
 
         URL starshipImageURL = Objects.requireNonNull(
                 getClass().getResource("/images/starship.png"),
@@ -84,8 +107,9 @@ public class SimulationPane extends Pane {
         satelliteView.setVisible(false);
 
 
-        getChildren().addAll(groundView, starshipView, satelliteView);
+        getChildren().addAll(spaceView, groundView, starshipView, satelliteView);
     }
+
 
 
 
@@ -94,7 +118,16 @@ public class SimulationPane extends Pane {
         double verticalDisplacement = altitude * pixelsPerMeter;
 
         starshipView.setTranslateY(-verticalDisplacement);
+
+        //calculate space background opacity based on altitude (using linear interpolation equation)
+        double opacity = (altitude - FADE_START_ALTITUDE) / (FADE_END_ALTITUDE - FADE_START_ALTITUDE);
+
+        //keep opacity between 0 and 1
+        opacity = Math.max(0, Math.min(1, opacity));
+
+        spaceView.setOpacity(opacity);
     }
+
 
 
 

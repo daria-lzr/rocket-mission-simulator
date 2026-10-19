@@ -56,4 +56,12 @@ public class Mission {
         return false;
     }
 
+
+    public void deploySatellite() {
+        if (currentState == MissionState.ORBIT) {
+            currentState = MissionState.DEPLOYMENT;
+        }
+    }
+
+
 }

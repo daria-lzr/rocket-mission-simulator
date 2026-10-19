@@ -89,4 +89,16 @@ public class MissionController {
         stopSimulation();
         executor.shutdown();
     }
+
+
+
+    public void deploySatellite() {
+        if (mission.getCurrentState() == Mission.MissionState.ORBIT) {
+            mission.deploySatellite();
+            missionPane.updateMissionStatus();
+            simulationPane.showSatellite();
+        }
+    }
+
+
 }

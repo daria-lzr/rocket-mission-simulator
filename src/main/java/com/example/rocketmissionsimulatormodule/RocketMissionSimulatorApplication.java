@@ -31,6 +31,12 @@ public class RocketMissionSimulatorApplication extends Application {
         });
 
 
+        missionPane.setOnDeploy(() -> {
+            missionController.deploySatellite();
+        });
+
+
+
 
         BorderPane mainPane = new BorderPane();
 

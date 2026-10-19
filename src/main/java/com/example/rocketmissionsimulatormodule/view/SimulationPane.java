@@ -8,8 +8,12 @@ import javafx.scene.layout.Pane;
 import java.net.URL;
 import java.util.Objects;
 
+import javafx.animation.TranslateTransition;
+import javafx.util.Duration;
+
 public class SimulationPane extends Pane {
     private ImageView starshipView;
+    private ImageView satelliteView;
 
     public SimulationPane() {
         setPrefSize(800, 500);
@@ -65,7 +69,22 @@ public class SimulationPane extends Pane {
                 heightProperty().subtract(70)
         );
 
-        getChildren().addAll(groundView, starshipView);
+
+        //add satelite image
+        URL satelliteImageURL = Objects.requireNonNull(
+                getClass().getResource("/images/satelite.png"),
+                "Satellite image resource not found"
+        );
+
+        Image satelliteImage = new Image(satelliteImageURL.toExternalForm());
+        satelliteView = new ImageView(satelliteImage);
+
+        satelliteView.setPreserveRatio(true);
+        satelliteView.setFitWidth(80);
+        satelliteView.setVisible(false);
+
+
+        getChildren().addAll(groundView, starshipView, satelliteView);
     }
 
 
@@ -76,4 +95,34 @@ public class SimulationPane extends Pane {
 
         starshipView.setTranslateY(-verticalDisplacement);
     }
+
+
+
+    public void showSatellite() {
+        //find rocket's displayed position
+        double rocketCenterX = starshipView.getBoundsInParent().getCenterX();
+        double rocketCenterY = starshipView.getBoundsInParent().getCenterY();
+
+        //position  satellite at rocket's center
+        satelliteView.setLayoutX(
+                rocketCenterX - satelliteView.getBoundsInLocal().getWidth() / 2
+        );
+
+        satelliteView.setLayoutY(
+                rocketCenterY - satelliteView.getBoundsInLocal().getHeight() / 2
+        );
+
+        satelliteView.setVisible(true);
+
+        //animate satellite moving away from rocket
+        TranslateTransition separation =
+                new TranslateTransition(Duration.seconds(2), satelliteView);
+
+        separation.setByX(150);
+        separation.setByY(-50);
+
+        separation.play();
+    }
+
+
 }

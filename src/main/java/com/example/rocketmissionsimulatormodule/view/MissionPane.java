@@ -15,6 +15,9 @@ public class MissionPane extends VBox {
     private Label statusLabel;
     private Runnable onLaunch;
 
+    private Button deployButton;
+    private Runnable onDeploy;
+
     public MissionPane(Mission mission) {
         this.mission = mission;
 
@@ -46,12 +49,27 @@ public class MissionPane extends VBox {
         Label activeEventLabel = new Label("Active Event: None");
         Label objectiveLabel = new Label("Objective: Deploy satellite");
 
+
+        deployButton = new Button("Deploy Satellite");
+        deployButton.setPrefWidth(240);
+        deployButton.setPrefHeight(45);
+        deployButton.setMinHeight(40);
+        deployButton.setDisable(true);
+
+        deployButton.setOnAction(event -> {
+            if (onDeploy != null) {
+                onDeploy.run();
+            }
+        });
+
+
         getChildren().addAll(
                 missionTitle,
                 statusLabel,
                 activeEventLabel,
                 objectiveLabel,
-                launchButton
+                launchButton,
+                deployButton
         );
     }
 
@@ -59,10 +77,18 @@ public class MissionPane extends VBox {
         this.onLaunch = onLaunch;
     }
 
+    public void setOnDeploy(Runnable onDeploy) {
+        this.onDeploy = onDeploy;
+    }
+
 
 
     public void updateMissionStatus() {
         statusLabel.setText("Status: " + mission.getCurrentState());
+
+        deployButton.setDisable(
+                mission.getCurrentState() != Mission.MissionState.ORBIT
+        );
     }
 
 }

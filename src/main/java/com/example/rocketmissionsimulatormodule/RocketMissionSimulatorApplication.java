@@ -36,6 +36,10 @@ public class RocketMissionSimulatorApplication extends Application {
         });
 
 
+        missionPane.setOnEventResponse(selectedIndex -> {
+            missionController.handleEventResponse(selectedIndex);
+        });
+
 
 
         BorderPane mainPane = new BorderPane();

@@ -2,6 +2,7 @@
 /Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/com/example/rocketmissionsimulatormodule/RocketMissionSimulatorApplication.java
 /Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/com/example/rocketmissionsimulatormodule/util/Mission.java
 /Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/com/example/rocketmissionsimulatormodule/util/MissionController.java
+/Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/com/example/rocketmissionsimulatormodule/util/MissionEvent.java
 /Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/com/example/rocketmissionsimulatormodule/util/Rocket.java
 /Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/com/example/rocketmissionsimulatormodule/view/MissionLogPane.java
 /Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/com/example/rocketmissionsimulatormodule/view/MissionPane.java

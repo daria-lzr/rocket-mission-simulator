@@ -1,6 +1,7 @@
 com/example/rocketmissionsimulatormodule/view/MissionPane.class
 com/example/rocketmissionsimulatormodule/util/Rocket.class
 com/example/rocketmissionsimulatormodule/view/MissionPane$1.class
+com/example/rocketmissionsimulatormodule/util/MissionEvent.class
 com/example/rocketmissionsimulatormodule/util/Mission$MissionState.class
 module-info.class
 com/example/rocketmissionsimulatormodule/util/MissionController.class

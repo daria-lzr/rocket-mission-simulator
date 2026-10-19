@@ -25,6 +25,12 @@ public class MissionController {
 
     private ScheduledFuture<?> simulationTask;
 
+    private static final double OVERHEATING_ALTITUDE = 400.0;
+
+    private MissionEvent activeEvent;
+
+    private boolean overheatingTriggered = false;
+
 
     public MissionController(Mission mission, TelemetryPane telemetryPane, SimulationPane simulationPane, MissionPane missionPane) {
         this.mission = mission;
@@ -42,6 +48,8 @@ public class MissionController {
 
             double altitude = mission.getRocket().getAltitude();
             double velocity = mission.getRocket().getVelocity();
+
+            checkMissionEvents(altitude);
 
             boolean orbitReached = mission.checkOrbitReached();
 
@@ -114,6 +122,35 @@ public class MissionController {
             stopSimulation();
             missionPane.updateMissionStatus();
         }
+    }
+
+    private void checkMissionEvents(double altitude) {
+        if (!overheatingTriggered
+                && altitude >= OVERHEATING_ALTITUDE
+                && mission.getCurrentState() == Mission.MissionState.ASCENT) {
+
+            overheatingTriggered = true;
+
+            Platform.runLater(() -> {
+                if (mission.getCurrentState() == Mission.MissionState.ASCENT) {
+                    activeEvent = MissionEvent.ENGINE_OVERHEATING;
+                    missionPane.displayMissionEvent(activeEvent);
+                }
+            });
+        }
+    }
+
+
+    public void handleEventResponse(int selectedIndex) {
+        if (activeEvent == null) {
+            return;
+        }
+
+        System.out.println("Event: " + activeEvent);
+        System.out.println("Selected response index: " + selectedIndex);
+
+        activeEvent = null;
+        missionPane.clearMissionEvent();
     }
 
 

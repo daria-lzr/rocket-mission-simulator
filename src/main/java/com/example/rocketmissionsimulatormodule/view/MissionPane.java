@@ -83,12 +83,28 @@ public class MissionPane extends VBox {
 
 
 
-    public void updateMissionStatus() {
-        statusLabel.setText("Status: " + mission.getCurrentState());
 
-        deployButton.setDisable(
-                mission.getCurrentState() != Mission.MissionState.ORBIT
-        );
+
+    public void updateMissionStatus() {
+        Mission.MissionState state = mission.getCurrentState();
+
+        switch (state) {
+            case SUCCESS:
+                statusLabel.setText("Status: Mission Successful!");
+                break;
+
+            case FAILURE:
+                statusLabel.setText("Status: Mission Failed!");
+                break;
+
+            default:
+                statusLabel.setText("Status: " + state);
+                break;
+        }
+
+        deployButton.setDisable(state != Mission.MissionState.ORBIT);
     }
+
+
 
 }

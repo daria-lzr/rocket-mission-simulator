@@ -92,13 +92,31 @@ public class MissionController {
 
 
 
+
     public void deploySatellite() {
         if (mission.getCurrentState() == Mission.MissionState.ORBIT) {
             mission.deploySatellite();
             missionPane.updateMissionStatus();
-            simulationPane.showSatellite();
+
+            simulationPane.showSatellite(() -> {
+                mission.completeMission();
+                missionPane.updateMissionStatus();
+            });
         }
     }
+
+
+
+    public void failMission() {
+        //check is mission alr ended
+        if (mission.getCurrentState() != Mission.MissionState.SUCCESS && mission.getCurrentState() != Mission.MissionState.FAILURE) {
+            mission.failMission();
+            stopSimulation();
+            missionPane.updateMissionStatus();
+        }
+    }
+
+
 
 
 }

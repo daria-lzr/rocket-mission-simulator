@@ -63,5 +63,17 @@ public class Mission {
         }
     }
 
+    public void completeMission() {
+        if (currentState == MissionState.DEPLOYMENT) {
+            currentState = MissionState.SUCCESS;
+        }
+    }
+
+    public void failMission() {
+        if (currentState != MissionState.SUCCESS && currentState != MissionState.FAILURE) {
+            currentState = MissionState.FAILURE;
+        }
+    }
+
 
 }

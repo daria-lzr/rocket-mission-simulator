@@ -98,7 +98,7 @@ public class SimulationPane extends Pane {
 
 
 
-    public void showSatellite() {
+    public void showSatellite(Runnable onSeparationFinished) {
         //find rocket's displayed position
         double rocketCenterX = starshipView.getBoundsInParent().getCenterX();
         double rocketCenterY = starshipView.getBoundsInParent().getCenterY();
@@ -120,6 +120,8 @@ public class SimulationPane extends Pane {
 
         separation.setByX(150);
         separation.setByY(-50);
+
+        separation.setOnFinished(event -> onSeparationFinished.run());
 
         separation.play();
     }

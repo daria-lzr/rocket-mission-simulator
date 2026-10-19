@@ -1,29 +1,39 @@
 
 package com.example.rocketmissionsimulatormodule.view;
 
+import javafx.animation.TranslateTransition;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
+import javafx.util.Duration;
 
 import java.net.URL;
 import java.util.Objects;
 
-import javafx.animation.TranslateTransition;
-import javafx.util.Duration;
-
 public class SimulationPane extends Pane {
+
     private ImageView starshipView;
     private ImageView satelliteView;
     private ImageView spaceView;
 
-
-    private static final double FADE_START_ALTITUDE = 100;  // 20 km
-    private static final double FADE_END_ALTITUDE = 900;   // 100 km
-
+    private static final double FADE_START_ALTITUDE = 100;
+    private static final double FADE_END_ALTITUDE = 900;
 
     public SimulationPane() {
         setPrefSize(800, 500);
 
+        setupBackground();
+        setupSpace();
+        setupStarship();
+        ImageView groundView = setupGround();
+        setupSatellite();
+
+        getChildren().addAll(
+                spaceView, groundView, starshipView, satelliteView
+        );
+    }
+
+    private void setupBackground() {
         setStyle(
                 "-fx-background-color: linear-gradient("
                         + "to bottom, "
@@ -32,9 +42,9 @@ public class SimulationPane extends Pane {
                         + "#C5E5FF 100%"
                         + ");"
         );
+    }
 
-
-
+    private void setupSpace() {
         URL spaceImageURL = Objects.requireNonNull(
                 getClass().getResource("/images/space.png"),
                 "Space image resource not found"
@@ -48,8 +58,9 @@ public class SimulationPane extends Pane {
 
         spaceView.fitWidthProperty().bind(widthProperty());
         spaceView.fitHeightProperty().bind(heightProperty());
+    }
 
-
+    private void setupStarship() {
         URL starshipImageURL = Objects.requireNonNull(
                 getClass().getResource("/images/starship.png"),
                 "Starship image resource not found"
@@ -74,7 +85,9 @@ public class SimulationPane extends Pane {
                         .subtract(70)
                         .subtract(starshipView.getBoundsInLocal().getHeight())
         );
+    }
 
+    private ImageView setupGround() {
         URL groundImageURL = Objects.requireNonNull(
                 getClass().getResource("/images/ground.png"),
                 "Ground image resource not found"
@@ -92,8 +105,10 @@ public class SimulationPane extends Pane {
                 heightProperty().subtract(70)
         );
 
+        return groundView;
+    }
 
-        //add satelite image
+    private void setupSatellite() {
         URL satelliteImageURL = Objects.requireNonNull(
                 getClass().getResource("/images/satelite.png"),
                 "Satellite image resource not found"
@@ -105,13 +120,7 @@ public class SimulationPane extends Pane {
         satelliteView.setPreserveRatio(true);
         satelliteView.setFitWidth(80);
         satelliteView.setVisible(false);
-
-
-        getChildren().addAll(spaceView, groundView, starshipView, satelliteView);
     }
-
-
-
 
     public void updateRocketPosition(double altitude) {
         double pixelsPerMeter = 0.1;
@@ -148,8 +157,7 @@ public class SimulationPane extends Pane {
         satelliteView.setVisible(true);
 
         //animate satellite moving away from rocket
-        TranslateTransition separation =
-                new TranslateTransition(Duration.seconds(2), satelliteView);
+        TranslateTransition separation = new TranslateTransition(Duration.seconds(2), satelliteView);
 
         separation.setByX(150);
         separation.setByY(-50);

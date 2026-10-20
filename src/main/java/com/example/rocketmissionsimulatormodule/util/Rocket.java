@@ -6,7 +6,9 @@ public class Rocket {
     private double velocity;
 
 
-    private static final double ACCELERATION = 20.0;
+    private static final double DEFAULT_ACCELERATION = 2.0;
+
+    private volatile double currentAcceleration = DEFAULT_ACCELERATION;
 
     public Rocket() {
         this.altitude = 0.0;
@@ -23,7 +25,15 @@ public class Rocket {
 
 
     public void updateFlight(double deltaTime) {
-        velocity += ACCELERATION * deltaTime;
+        velocity += currentAcceleration * deltaTime;
         altitude += velocity * deltaTime;
+    }
+
+    public void reduceAcceleration() {
+        currentAcceleration = DEFAULT_ACCELERATION / 2.0;
+    }
+
+    public void restoreAcceleration() {
+        currentAcceleration = DEFAULT_ACCELERATION;
     }
 }

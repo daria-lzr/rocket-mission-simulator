@@ -17,7 +17,7 @@ public class Mission {
 
     private volatile MissionState currentState;
 
-    private static final double TARGET_ALTITUDE = 1000.0;
+    private static final double TARGET_ALTITUDE = 10000.0;
     private static final double TARGET_VELOCITY = 200.0;
 
 

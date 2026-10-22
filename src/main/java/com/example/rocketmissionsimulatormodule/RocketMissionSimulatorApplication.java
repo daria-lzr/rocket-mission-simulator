@@ -24,7 +24,9 @@ public class RocketMissionSimulatorApplication extends Application {
         TelemetryPane telemetryPane = new TelemetryPane();
         SimulationPane simulationPane = new SimulationPane();
 
-        MissionController missionController = new MissionController(mission, telemetryPane, simulationPane, missionPane);
+        MissionLogPane missionLogPane = new MissionLogPane();
+        MissionController missionController = new MissionController(
+                mission, telemetryPane, simulationPane, missionPane, missionLogPane);
 
         missionPane.setOnLaunch(() -> {
             missionController.startSimulation();
@@ -47,8 +49,6 @@ public class RocketMissionSimulatorApplication extends Application {
 
 
         VBox rightVBox = createRightSidebar(missionPane, telemetryPane);
-        MissionLogPane missionLogPane = new MissionLogPane();
-
         //assemble  main layout
         mainPane.setCenter(simulationPane);
         mainPane.setRight(rightVBox);

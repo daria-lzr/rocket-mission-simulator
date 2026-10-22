@@ -1,5 +1,6 @@
 package com.example.rocketmissionsimulatormodule.util;
 
+import com.example.rocketmissionsimulatormodule.view.MissionLogPane;
 import com.example.rocketmissionsimulatormodule.view.MissionPane;
 import com.example.rocketmissionsimulatormodule.view.SimulationPane;
 import com.example.rocketmissionsimulatormodule.view.TelemetryPane;
@@ -22,6 +23,7 @@ public class MissionController {
     private final TelemetryPane telemetryPane;
     private final SimulationPane simulationPane;
     private final MissionPane missionPane;
+    private final MissionLogPane missionLogPane;
 
     private final ScheduledExecutorService executor =
             Executors.newSingleThreadScheduledExecutor();
@@ -37,11 +39,12 @@ public class MissionController {
     private long eventDeadlineNanos;
 
 
-    public MissionController(Mission mission, TelemetryPane telemetryPane, SimulationPane simulationPane, MissionPane missionPane) {
+    public MissionController(Mission mission, TelemetryPane telemetryPane, SimulationPane simulationPane, MissionPane missionPane, MissionLogPane missionLogPane) {
         this.mission = mission;
         this.telemetryPane = telemetryPane;
         this.simulationPane = simulationPane;
         this.missionPane = missionPane;
+        this.missionLogPane = missionLogPane;
     }
 
 
@@ -71,7 +74,13 @@ public class MissionController {
              * because JavaFX modifies the GUI solely though its designated thread
              *
              */
+            final boolean reachedOrbit = orbitReached;
             Platform.runLater(() -> {
+                if (reachedOrbit) {
+                    missionLogPane.setAscending(false);
+                    missionLogPane.addEntry("ORBIT: Target orbit reached successfully.");
+                    missionLogPane.addEntry("INSTRUCTION: Deploy the satellite to complete the mission.");
+                }
                 telemetryPane.updateTelemetry(altitude, velocity);
                 simulationPane.updateRocketPosition(altitude);
                 missionPane.updateMissionStatus();
@@ -87,6 +96,11 @@ public class MissionController {
     public void startSimulation() {
         if (mission.getCurrentState() == Mission.MissionState.ASCENT
                 && (simulationTask == null || simulationTask.isDone())) {
+
+            missionLogPane.setAscending(true);
+            missionLogPane.addEntry("LIFTOFF: Rocket launch successful.");
+            missionLogPane.addEntry("STATUS: Rocket ascending toward target orbit.");
+            missionLogPane.addEntry("INSTRUCTION: Monitor telemetry for flight updates.");
 
             simulationTask = executor.scheduleAtFixedRate(
                     () -> updateSimulation(),
@@ -115,10 +129,12 @@ public class MissionController {
     public void deploySatellite() {
         if (mission.getCurrentState() == Mission.MissionState.ORBIT) {
             mission.deploySatellite();
+            missionLogPane.addEntry("DEPLOYMENT: Satellite deployment initiated.");
             missionPane.updateMissionStatus();
 
             simulationPane.showSatellite(() -> {
                 mission.completeMission();
+                missionLogPane.addEntry("SUCCESS: Satellite deployed. Mission complete!");
                 missionPane.updateMissionStatus();
             });
         }
@@ -130,6 +146,8 @@ public class MissionController {
         //check is mission alr ended
         if (mission.getCurrentState() != Mission.MissionState.SUCCESS && mission.getCurrentState() != Mission.MissionState.FAILURE) {
             mission.failMission();
+            missionLogPane.setAscending(false);
+            missionLogPane.addEntry("FAILURE: Critical engine failure. Mission terminated.");
             stopSimulation();
             missionPane.updateMissionStatus();
             simulationPane.showFailureAnimation();
@@ -149,6 +167,8 @@ public class MissionController {
                     activeEvent = MissionEvent.ENGINE_OVERHEATING;
                     eventDeadlineNanos = System.nanoTime() + EVENT_RESPONSE_TIMEOUT_NANOS;
                     missionPane.displayMissionEvent(activeEvent);
+                    missionLogPane.addEntry("WARNING: Engine overheating detected!");
+                    missionLogPane.addEntry("INSTRUCTION: Select a response within 10 seconds.");
                 }
             });
         }
@@ -161,6 +181,7 @@ public class MissionController {
 
         if (System.nanoTime() - eventDeadlineNanos >= 0) {
             System.out.println("Event response timed out!");
+            missionLogPane.addEntry("WARNING: Response timed out. Engine failure imminent.");
 
             handleEventResponse(2);
         }
@@ -180,11 +201,16 @@ public class MissionController {
         System.out.println("Selected response index: " + selectedIndex);
 
         if (selectedIndex == 0) {
+            missionLogPane.addEntry("RECOVERY: Throttle reduced to cool the engine.");
             reduceEngineThrottle();
             simulationPane.showRecoveryNotification(false);
         } else if (selectedIndex == 1) {
+            missionLogPane.addEntry("RECOVERY: Emergency cooling activated. Ascent continuing.");
             simulationPane.showRecoveryNotification(true);
         } else if (selectedIndex == 2) {
+            if (System.nanoTime() - eventDeadlineNanos < 0) {
+                missionLogPane.addEntry("WARNING: Overheating warning ignored. Engine failure imminent.");
+            }
             scheduleEngineFailure();
         }
 
@@ -222,6 +248,7 @@ public class MissionController {
                 mission.getRocket().restoreAcceleration();
 
                 System.out.println("Engine throttle restored!");
+                missionLogPane.addEntry("STATUS: Engine throttle restored.");
             }
         });
 

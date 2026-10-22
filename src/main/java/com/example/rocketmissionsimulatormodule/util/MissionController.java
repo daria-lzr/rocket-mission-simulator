@@ -147,6 +147,7 @@ public class MissionController {
         if (mission.getCurrentState() != Mission.MissionState.SUCCESS && mission.getCurrentState() != Mission.MissionState.FAILURE) {
             mission.failMission();
             missionLogPane.setAscending(false);
+            missionLogPane.hideResponseCountdown();
             missionLogPane.addEntry("FAILURE: Critical engine failure. Mission terminated.");
             stopSimulation();
             missionPane.updateMissionStatus();
@@ -169,6 +170,7 @@ public class MissionController {
                     missionPane.displayMissionEvent(activeEvent);
                     missionLogPane.addEntry("WARNING: Engine overheating detected!");
                     missionLogPane.addEntry("INSTRUCTION: Select a response within 10 seconds.");
+                    missionLogPane.showResponseCountdown(eventDeadlineNanos, EVENT_RESPONSE_TIMEOUT_NANOS);
                 }
             });
         }
@@ -196,6 +198,8 @@ public class MissionController {
         if (System.nanoTime() - eventDeadlineNanos >= 0) {
             selectedIndex = 2;
         }
+
+        missionLogPane.hideResponseCountdown();
 
         System.out.println("Event: " + activeEvent);
         System.out.println("Selected response index: " + selectedIndex);

@@ -3,11 +3,18 @@ package com.example.rocketmissionsimulatormodule.view;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Queue;
+import javafx.animation.AnimationTimer;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -22,6 +29,12 @@ public class MissionLogPane extends ScrollPane {
     private final TextFlow messages = new TextFlow();
     private final Text activity = new Text();
     private final VBox content = new VBox(5);
+    private final VBox responseCountdown = new VBox(5);
+    private final StackPane countdownTrack = new StackPane();
+    private final Region countdownFill = new Region();
+    private final Text countdownLabel = new Text();
+    private final DoubleProperty countdownFraction = new SimpleDoubleProperty(1.0);
+    private AnimationTimer countdownAnimation;
     private final Font font;
     private boolean initializing = true;
     private boolean displayingMessage;
@@ -43,7 +56,8 @@ public class MissionLogPane extends ScrollPane {
         messages.setLineSpacing(3);
         activity.setFont(font);
         activity.setFill(Color.web("#BFC7D1"));
-        content.getChildren().addAll(messages, activity);
+        initializeCountdown();
+        content.getChildren().addAll(messages, responseCountdown, activity);
         content.setPadding(new Insets(12));
         content.setStyle("-fx-background-color: #050807;");
         setContent(content);
@@ -57,7 +71,8 @@ public class MissionLogPane extends ScrollPane {
 
         Timeline activityAnimation = new Timeline(
                 new KeyFrame(Duration.millis(400), e -> {
-                    if (ascending && !initializing && !displayingMessage && pendingMessages.isEmpty()) {
+                    if (ascending && !responseCountdown.isVisible()
+                            && !initializing && !displayingMessage && pendingMessages.isEmpty()) {
                         dots = (dots + 1) % 4;
                         activity.setText("> ASCENT IN PROGRESS" + ".".repeat(dots));
                         setVvalue(1.0);
@@ -66,6 +81,84 @@ public class MissionLogPane extends ScrollPane {
         );
         activityAnimation.setCycleCount(Timeline.INDEFINITE);
         activityAnimation.play();
+    }
+
+    private void initializeCountdown() {
+        countdownLabel.setFont(font);
+        countdownLabel.setFill(Color.web("#FFCE72"));
+        countdownLabel.setText("> RESPONSE TIME: 10.0s");
+
+        countdownTrack.setPrefSize(440, 24);
+        countdownTrack.setMaxWidth(440);
+        countdownTrack.setMinHeight(24);
+        countdownTrack.setMaxHeight(24);
+        countdownTrack.setAlignment(Pos.CENTER_LEFT);
+        countdownTrack.setStyle("-fx-background-color: #152024;"
+                + "-fx-border-color: #899AA0; -fx-border-width: 2;"
+                + "-fx-padding: 4;");
+
+        countdownFill.setMinWidth(0);
+        countdownFill.setMaxWidth(Region.USE_PREF_SIZE);
+        countdownFill.setMinHeight(12);
+        countdownFill.setPrefHeight(12);
+        countdownFill.setMaxHeight(12);
+        countdownFill.setStyle("-fx-background-color: #6BE6A5;");
+        countdownFill.prefWidthProperty().bind(Bindings.createDoubleBinding(
+                () -> Math.max(0, (countdownTrack.getWidth() - 12) * countdownFraction.get()),
+                countdownTrack.widthProperty(), countdownFraction));
+        countdownTrack.getChildren().add(countdownFill);
+        StackPane.setAlignment(countdownFill, Pos.CENTER_LEFT);
+
+        responseCountdown.getChildren().addAll(countdownLabel, countdownTrack);
+        VBox.setMargin(responseCountdown, new Insets(6, 0, 8, 0));
+        responseCountdown.setVisible(false);
+        responseCountdown.setManaged(false);
+    }
+
+    /** Display a countdown inside the mission log, using the controller's actual deadline. */
+    public void showResponseCountdown(long deadlineNanos, long durationNanos) {
+        if (!Platform.isFxApplicationThread()) {
+            Platform.runLater(() -> showResponseCountdown(deadlineNanos, durationNanos));
+            return;
+        }
+        hideResponseCountdown();
+        responseCountdown.setManaged(true);
+        responseCountdown.setVisible(true);
+        countdownFraction.set(1.0);
+        activity.setText("");
+
+        countdownAnimation = new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                long remaining = Math.max(0, deadlineNanos - System.nanoTime());
+                double fraction = durationNanos == 0 ? 0
+                        : Math.min(1.0, (double) remaining / durationNanos);
+                countdownFraction.set(fraction);
+                countdownLabel.setText(String.format(java.util.Locale.US,
+                        "> RESPONSE TIME: %.1fs", remaining / 1_000_000_000.0));
+                String color = fraction > 0.5 ? "#6BE6A5"
+                        : fraction > 0.2 ? "#F5C86A" : "#FF7474";
+                countdownFill.setStyle("-fx-background-color: " + color + ";");
+                setVvalue(1.0);
+                if (remaining == 0) {
+                    stop();
+                }
+            }
+        };
+        countdownAnimation.start();
+    }
+
+    public void hideResponseCountdown() {
+        if (!Platform.isFxApplicationThread()) {
+            Platform.runLater(this::hideResponseCountdown);
+            return;
+        }
+        if (countdownAnimation != null) {
+            countdownAnimation.stop();
+            countdownAnimation = null;
+        }
+        responseCountdown.setVisible(false);
+        responseCountdown.setManaged(false);
     }
 
     private void setEditableAppearance() {

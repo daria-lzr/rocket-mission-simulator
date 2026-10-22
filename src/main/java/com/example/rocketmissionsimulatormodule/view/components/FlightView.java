@@ -4,6 +4,7 @@ import javafx.animation.TranslateTransition;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
+import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 
 import java.net.URL;
@@ -14,15 +15,26 @@ public class FlightView extends Pane {
     private ImageView starshipView;
     private ImageView satelliteView;
     private ImageView spaceView;
+    private ImageView groundView;
 
-    private static final double FADE_START_ALTITUDE = 100;
-    private static final double FADE_END_ALTITUDE = 900;
+    private static final double FADE_START_ALTITUDE = 30_000.0;
+    private static final double FADE_END_ALTITUDE = 220_000.0;
+
+    // the ground scrolls down and leaves the camera view during initial ascent.
+    private static final double GROUND_EXIT_ALTITUDE = 1_500.0;
+    private static final double GROUND_HEIGHT = 70.0;
 
     public FlightView() {
+        // keep scenery from drawing outside the simulation viewport as it scrolls.
+        Rectangle viewportClip = new Rectangle();
+        viewportClip.widthProperty().bind(widthProperty());
+        viewportClip.heightProperty().bind(heightProperty());
+        setClip(viewportClip);
+
         setupBackground();
         setupSpace();
         setupStarship();
-        ImageView groundView = setupGround();
+        groundView = setupGround();
         setupSatellite();
 
         getChildren().addAll(
@@ -97,14 +109,15 @@ public class FlightView extends Pane {
 
         Image groundImage = new Image(groundImageURL.toExternalForm());
         ImageView groundView = new ImageView(groundImage);
+        groundView.setSmooth(true);
 
-        groundView.setFitHeight(70);
+        groundView.setFitHeight(GROUND_HEIGHT);
         groundView.setPreserveRatio(false);
 
         groundView.fitWidthProperty().bind(widthProperty());
 
         groundView.layoutYProperty().bind(
-                heightProperty().subtract(70)
+                heightProperty().subtract(GROUND_HEIGHT)
         );
 
         return groundView;
@@ -125,22 +138,35 @@ public class FlightView extends Pane {
     }
 
     public void updateRocketPosition(double altitude) {
-        double pixelsPerMeter = 0.1;
-        double verticalDisplacement = altitude * pixelsPerMeter;
+        // keep the ground anchored at the bottom. A capped, slow upward
+        // rocket animation suggests ascent without sending it off-screen.
+        double rocketHeight = starshipView.getBoundsInLocal().getHeight();
+        double startingCenterY = getHeight() - 70 - rocketHeight / 2.0;
+        double desiredCenterY = getHeight() * 0.45;
+        double maximumShipMovement = Math.max(0.0, startingCenterY - desiredCenterY);
+        double initialRise = Math.min(maximumShipMovement * 0.65, altitude * 0.1);
+        double continuingRise = maximumShipMovement * 0.35
+                * (1.0 - Math.exp(-Math.max(0.0, altitude - 2_000.0) / 65_000.0));
+        starshipView.setTranslateY(-Math.min(maximumShipMovement,
+                initialRise + continuingRise));
+        // as the rocket climbs, the ground moves DOWN and out of the camera frame.
+        // no opacity change: it is gradually clipped by the bottom of the view.
+        double groundDistance = Math.clamp(altitude / GROUND_EXIT_ALTITUDE, 0.0, 1.0);
+        groundView.setOpacity(1.0);
+        double groundY = GROUND_HEIGHT * groundDistance;
+        groundView.setTranslateY(groundY);
+        groundView.setVisible(groundDistance < 1.0);
 
-        starshipView.setTranslateY(-verticalDisplacement);
-
-        //calculate space background opacity based on altitude (using linear interpolation equation)
-        double opacity = (altitude - FADE_START_ALTITUDE) / (FADE_END_ALTITUDE - FADE_START_ALTITUDE);
-
-        //keep opacity between 0 and 1
-        opacity = Math.max(0, Math.min(1, opacity));
-
-        spaceView.setOpacity(opacity);
+        // cinematic sky-to-space transition spread across a large portion
+        // of the ascent. Smoothstep avoids an abrupt start and finish.
+        double progress = (altitude - FADE_START_ALTITUDE)
+                / (FADE_END_ALTITUDE - FADE_START_ALTITUDE);
+        progress = Math.max(0.0, Math.min(1.0, progress));
+        spaceView.setOpacity(progress * progress * (3.0 - 2.0 * progress));
     }
 
     public void showSatellite(Runnable onSeparationFinished) {
-        //find rocket's displayed position
+        //find rocket displayed position
         double rocketCenterX = starshipView.getBoundsInParent().getCenterX();
         double rocketCenterY = starshipView.getBoundsInParent().getCenterY();
 

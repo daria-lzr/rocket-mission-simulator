@@ -33,9 +33,11 @@ public class MissionController {
     private static final double OVERHEATING_ALTITUDE = 400.0;
     private MissionEvent activeEvent;
     private boolean overheatingTriggered = false;
+    private boolean propellantExhaustionLogged = false;
+    private boolean engineCutoffLogged = false;
     private volatile boolean eventPending = false;
 
-    private static final long EVENT_RESPONSE_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(10);
+    private static final long EVENT_RESPONSE_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(20);
     private long eventDeadlineNanos;
 
 
@@ -56,6 +58,25 @@ public class MissionController {
 
             double altitude = mission.getRocket().getAltitude();
             double velocity = mission.getRocket().getVelocity();
+            double fuelFraction = mission.getRocket().getFuelFraction();
+            double throttle = mission.getRocket().getEffectiveThrottle();
+            if (!propellantExhaustionLogged && mission.getRocket().isOutOfFuel()) {
+                propellantExhaustionLogged = true;
+                Platform.runLater(() -> missionLogPane.addEntry(
+                        "ENGINE CUTOFF: Propellant exhausted. Coasting toward target altitude."));
+            }
+
+            if (!engineCutoffLogged && mission.getRocket().hasEngineCutoff()) {
+                engineCutoffLogged = true;
+                Platform.runLater(() -> missionLogPane.addEntry(
+                        "ENGINE CUTOFF: Coasting toward the target apogee."));
+            }
+
+            // Do not fail merely because the engines have shut down.
+            // Check whether the highest reached altitude was sufficient.
+            boolean missedTarget = (mission.getRocket().hasCrashed()
+                    || (mission.getRocket().isCoasting() && velocity <= 0.0))
+                    && altitude < Mission.TARGET_ALTITUDE;
 
             checkMissionEvents(altitude);
 
@@ -65,7 +86,7 @@ public class MissionController {
                 orbitReached = mission.checkOrbitReached();
             }
 
-            if (orbitReached) {
+            if (orbitReached || missedTarget) {
                 stopSimulation();
             }
 
@@ -75,13 +96,18 @@ public class MissionController {
              *
              */
             final boolean reachedOrbit = orbitReached;
+            final boolean failedAscent = missedTarget && !orbitReached;
             Platform.runLater(() -> {
+                if (failedAscent) {
+                    failMission("Rocket could not reach the 300 km target altitude.");
+                    return;
+                }
                 if (reachedOrbit) {
                     missionLogPane.setAscending(false);
-                    missionLogPane.addEntry("ORBIT: Target orbit reached successfully.");
+                    missionLogPane.addEntry("APOGEE: Target altitude reached (300 km). Vertical ascent complete.");
                     missionLogPane.addEntry("INSTRUCTION: Deploy the satellite to complete the mission.");
                 }
-                telemetryPane.updateTelemetry(altitude, velocity);
+                telemetryPane.updateTelemetry(altitude, velocity, fuelFraction, throttle);
                 simulationPane.updateRocketPosition(altitude);
                 missionPane.updateMissionStatus();
 
@@ -99,7 +125,7 @@ public class MissionController {
 
             missionLogPane.setAscending(true);
             missionLogPane.addEntry("LIFTOFF: Rocket launch successful.");
-            missionLogPane.addEntry("STATUS: Rocket ascending toward target orbit.");
+            missionLogPane.addEntry("STATUS: Automatic ascent guidance active. Target: 300 km.");
             missionLogPane.addEntry("INSTRUCTION: Monitor telemetry for flight updates.");
 
             simulationTask = executor.scheduleAtFixedRate(
@@ -144,12 +170,16 @@ public class MissionController {
 
 
     public void failMission() {
+        failMission("Critical engine failure. Mission terminated.");
+    }
+
+    private void failMission(String reason) {
         //check is mission alr ended
         if (mission.getCurrentState() != Mission.MissionState.SUCCESS && mission.getCurrentState() != Mission.MissionState.FAILURE) {
             mission.failMission();
             missionLogPane.setAscending(false);
             missionLogPane.hideEventPrompt();
-            missionLogPane.addEntry("FAILURE: Critical engine failure. Mission terminated.");
+            missionLogPane.addEntry("FAILURE: " + reason);
             stopSimulation();
             missionPane.updateMissionStatus();
             simulationPane.showFailureAnimation();

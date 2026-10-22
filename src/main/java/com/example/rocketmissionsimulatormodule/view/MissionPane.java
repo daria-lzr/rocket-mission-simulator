@@ -124,7 +124,7 @@ public class MissionPane extends VBox {
         switch (state) {
             case PRE_LAUNCH -> setStatus("○  PRE-LAUNCH", "#CBD5E1");
             case ASCENT -> setStatus("↑  ASCENDING", "#63C7FF");
-            case ORBIT -> setStatus("◎  IN ORBIT", "#A5B4FC");
+            case ORBIT -> setStatus("◎  ALTITUDE REACHED", "#A5B4FC");
             case DEPLOYMENT -> setStatus("↗  DEPLOYING", "#F5C86A");
             case SUCCESS -> setStatus("✓  SUCCESS", "#86EFAC");
             case FAILURE -> setStatus("✕  FAILURE", "#FF7474");

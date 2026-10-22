@@ -17,13 +17,13 @@ public class Mission {
 
     private volatile MissionState currentState;
 
-    public static final double TARGET_ALTITUDE = 10000.0;
-    public static final double TARGET_VELOCITY = 200.0;
+    public static final double TARGET_ALTITUDE = 300000.0;
+    public static final double VELOCITY_DISPLAY_SCALE = 2500.0;
 
 
     public Mission() {
         this.currentState = MissionState.PRE_LAUNCH;
-        this.rocket = new Rocket();
+        this.rocket = new Rocket(TARGET_ALTITUDE);
     }
 
     public MissionState getCurrentState() {
@@ -48,7 +48,11 @@ public class Mission {
             return false;
         }
 
-        if (rocket.getAltitude() >= TARGET_ALTITUDE && rocket.getVelocity() >= TARGET_VELOCITY) {
+        // The mission pauses at apogee, not at the first crossing of 300 km.
+        // Vertical velocity should be approximately zero at this point.
+        // This is still a deployment-altitude milestone, not a real orbit.
+        if (rocket.hasLeftGround() && rocket.getAltitude() >= TARGET_ALTITUDE
+                && rocket.getVelocity() <= 0.0) {
             currentState = MissionState.ORBIT;
             return true;
         }

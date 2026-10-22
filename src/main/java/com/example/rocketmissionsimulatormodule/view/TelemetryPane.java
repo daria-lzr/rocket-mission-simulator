@@ -17,6 +17,8 @@ public class TelemetryPane extends VBox {
 
     private final Meter altitudeMeter;
     private final Meter velocityMeter;
+    private final Meter fuelMeter;
+    private final Meter throttleMeter;
 
     public TelemetryPane() {
         setPadding(new Insets(16));
@@ -29,23 +31,31 @@ public class TelemetryPane extends VBox {
 
         altitudeMeter = new Meter("ALTITUDE", "0 m", "#63C7FF", 0.0, false);
         velocityMeter = new Meter("VELOCITY", "0 m/s", "#7FE0C1", 0.0, false);
-        Meter fuelMeter = new Meter("FUEL", "NOT IMPLEMENTED", "#68737E", 0.0, true);
-        Meter throttleMeter = new Meter("THROTTLE", "NOT IMPLEMENTED", "#68737E", 0.0, true);
+        fuelMeter = new Meter("PROPELLANT", "100.0%", "#7FD7A3", 1.0, false);
+        throttleMeter = new Meter("THROTTLE", "100.0%", "#E5BB79", 1.0, false);
 
         getChildren().addAll(title, altitudeMeter, velocityMeter, fuelMeter, throttleMeter);
     }
 
     public void updateTelemetry(double altitude, double velocity) {
         altitudeMeter.update(
-                String.format(java.util.Locale.US, "%.2f m / %.0f m",
+                String.format(java.util.Locale.US, "%.0f m / %.0f m",
                         altitude, Mission.TARGET_ALTITUDE),
                 altitude / Mission.TARGET_ALTITUDE
         );
         velocityMeter.update(
-                String.format(java.util.Locale.US, "%.2f m/s / %.0f m/s",
-                        velocity, Mission.TARGET_VELOCITY),
-                velocity / Mission.TARGET_VELOCITY
+                String.format(java.util.Locale.US, "%.0f m/s (vertical)", velocity),
+                Math.abs(velocity) / Mission.VELOCITY_DISPLAY_SCALE
         );
+    }
+
+    public void updateTelemetry(double altitude, double velocity,
+                                double fuelFraction, double throttle) {
+        updateTelemetry(altitude, velocity);
+        fuelMeter.update(String.format(java.util.Locale.US,
+                "%.1f%%", fuelFraction * 100.0), fuelFraction);
+        throttleMeter.update(String.format(java.util.Locale.US,
+                "%.1f%%", throttle * 100.0), throttle);
     }
 
     private static final class Meter extends VBox {
@@ -90,8 +100,7 @@ public class TelemetryPane extends VBox {
             fill.setPrefHeight(6);
             fill.setMinWidth(0);
             fill.setMaxWidth(Region.USE_PREF_SIZE);
-            fill.prefWidthProperty().bind(track.widthProperty().subtract(8)
-                    .multiply(Math.max(0.0, Math.min(1.0, progress))));
+            fill.prefWidthProperty().bind(track.widthProperty().subtract(8).multiply(Math.max(0.0, Math.min(1.0, progress))));
             track.getChildren().add(fill);
             StackPane.setAlignment(fill, Pos.CENTER_LEFT);
             StackPane.setMargin(fill, new Insets(0, 4, 0, 4));

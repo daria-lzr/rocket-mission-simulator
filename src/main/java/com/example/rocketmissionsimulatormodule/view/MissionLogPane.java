@@ -80,7 +80,7 @@ public class MissionLogPane extends ScrollPane {
 
         content.heightProperty().addListener((obs, oldHeight, newHeight) -> setVvalue(1.0));
 
-        addEntry("OBJECTIVE: Reach orbit and deploy the satellite.");
+        addEntry("OBJECTIVE: Reach 300 km and deploy the satellite.");
         addEntry("NEXT STEP: Press Launch to begin.");
         animateStartup();
 
@@ -167,7 +167,7 @@ public class MissionLogPane extends ScrollPane {
 
         if (event == MissionEvent.ENGINE_OVERHEATING) {
             appendMessage("WARNING: Engine overheating detected!");
-            appendMessage("INSTRUCTION: Select a response within 10 seconds.");
+            appendMessage("INSTRUCTION: Select a response within 20 seconds.");
 
             addResponseButton("[1] REDUCE ENGINE THROTTLE", 0);
             addResponseButton("[2] ACTIVATE EMERGENCY COOLING", 1);

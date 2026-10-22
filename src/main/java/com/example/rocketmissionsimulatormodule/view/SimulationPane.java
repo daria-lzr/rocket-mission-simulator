@@ -3,6 +3,7 @@ package com.example.rocketmissionsimulatormodule.view;
 import com.example.rocketmissionsimulatormodule.view.components.FailureOverlay;
 import com.example.rocketmissionsimulatormodule.view.components.FlightView;
 import com.example.rocketmissionsimulatormodule.view.components.RecoveryNotification;
+import com.example.rocketmissionsimulatormodule.view.components.SuccessOverlay;
 
 import javafx.scene.layout.Pane;
 
@@ -11,6 +12,7 @@ public class SimulationPane extends Pane {
     private final FlightView flightView;
     private final RecoveryNotification recoveryNotification;
     private final FailureOverlay failureOverlay;
+    private final SuccessOverlay successOverlay;
 
     public SimulationPane() {
         setPrefSize(800, 500);
@@ -18,29 +20,29 @@ public class SimulationPane extends Pane {
         flightView = new FlightView();
         recoveryNotification = new RecoveryNotification();
         failureOverlay = new FailureOverlay();
+        successOverlay = new SuccessOverlay();
 
         getChildren().addAll(
                 flightView,
                 recoveryNotification,
-                failureOverlay
+                failureOverlay,
+                successOverlay
         );
 
-        //flightView fills the simulation area
         flightView.prefWidthProperty().bind(widthProperty());
         flightView.prefHeightProperty().bind(heightProperty());
 
-        //center = recovery notification horizontally
         recoveryNotification.layoutXProperty().bind(
                 widthProperty()
                         .subtract(recoveryNotification.widthProperty())
                         .divide(2)
         );
-
         recoveryNotification.setLayoutY(30);
 
-        //failureOverlay covers  entire simulation area
         failureOverlay.prefWidthProperty().bind(widthProperty());
         failureOverlay.prefHeightProperty().bind(heightProperty());
+        successOverlay.prefWidthProperty().bind(widthProperty());
+        successOverlay.prefHeightProperty().bind(heightProperty());
     }
 
     public void updateRocketPosition(double altitude) {
@@ -57,5 +59,9 @@ public class SimulationPane extends Pane {
 
     public void showFailureAnimation() {
         failureOverlay.showFailure();
+    }
+
+    public void showSuccessAnimation() {
+        successOverlay.showSuccess();
     }
 }

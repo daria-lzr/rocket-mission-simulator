@@ -136,6 +136,7 @@ public class MissionController {
                 mission.completeMission();
                 missionLogPane.addEntry("SUCCESS: Satellite deployed. Mission complete!");
                 missionPane.updateMissionStatus();
+                simulationPane.showSuccessAnimation();
             });
         }
     }
@@ -147,7 +148,7 @@ public class MissionController {
         if (mission.getCurrentState() != Mission.MissionState.SUCCESS && mission.getCurrentState() != Mission.MissionState.FAILURE) {
             mission.failMission();
             missionLogPane.setAscending(false);
-            missionLogPane.hideResponseCountdown();
+            missionLogPane.hideEventPrompt();
             missionLogPane.addEntry("FAILURE: Critical engine failure. Mission terminated.");
             stopSimulation();
             missionPane.updateMissionStatus();
@@ -168,9 +169,8 @@ public class MissionController {
                     activeEvent = MissionEvent.ENGINE_OVERHEATING;
                     eventDeadlineNanos = System.nanoTime() + EVENT_RESPONSE_TIMEOUT_NANOS;
                     missionPane.displayMissionEvent(activeEvent);
-                    missionLogPane.addEntry("WARNING: Engine overheating detected!");
-                    missionLogPane.addEntry("INSTRUCTION: Select a response within 10 seconds.");
-                    missionLogPane.showResponseCountdown(eventDeadlineNanos, EVENT_RESPONSE_TIMEOUT_NANOS);
+                    missionLogPane.showEventPrompt(
+                            activeEvent, eventDeadlineNanos, EVENT_RESPONSE_TIMEOUT_NANOS);
                 }
             });
         }
@@ -199,7 +199,7 @@ public class MissionController {
             selectedIndex = 2;
         }
 
-        missionLogPane.hideResponseCountdown();
+        missionLogPane.hideEventPrompt();
 
         System.out.println("Event: " + activeEvent);
         System.out.println("Selected response index: " + selectedIndex);

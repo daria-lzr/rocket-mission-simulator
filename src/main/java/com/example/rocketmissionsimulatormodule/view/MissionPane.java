@@ -1,148 +1,113 @@
-
 package com.example.rocketmissionsimulatormodule.view;
 
 import com.example.rocketmissionsimulatormodule.util.Mission;
 import com.example.rocketmissionsimulatormodule.util.MissionEvent;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import javafx.scene.input.KeyCode;
-import java.util.function.Consumer;
+import javafx.scene.text.TextAlignment;
 
-
+/** Compact mission status and primary controls; event choices live in MissionLogPane. */
 public class MissionPane extends VBox {
 
-    private Mission mission;
+    private static final String FONT = "'Avenir Next', 'Segoe UI', Arial, sans-serif";
 
-    private Button launchButton;
-    private Label statusLabel;
+    private final Mission mission;
+    private final Label statusValue;
+    private final Label activeEventValue;
+    private final Button launchButton;
+    private final Button deployButton;
     private Runnable onLaunch;
-
-    private Button deployButton;
     private Runnable onDeploy;
-
-    private ListView<String> eventOptionsList;
-    private Consumer<Integer> onEventResponse;
-
-    private Label activeEventLabel;
-
 
     public MissionPane(Mission mission) {
         this.mission = mission;
+        setPadding(new Insets(16));
+        setSpacing(13);
+        setStyle("-fx-background-color: #050807;");
 
-        initializePane();
-        initializeLabels();
-        initializeLaunchButton();
-        initializeDeployButton();
-        initializeEventConsole();
-        initializeLayout();
-    }
+        // Match TelemetryPane: 16 px title, 11 px captions, 12 px values.
+        Label missionTitle = new Label("MISSION / EVENTS");
+        styleLabel(missionTitle, "#FFFFFF", 16, true);
 
-    private void initializePane() {
-        setPadding(new Insets(15));
-        setSpacing(10);
-        setStyle("-fx-background-color: #FCE8D5;");
-    }
+        statusValue = createValue("", "#E7EDF2");
+        activeEventValue = createValue("None", "#9AA8B7");
+        Label objectiveValue = createValue("Deploy satellite", "#F4F8FA");
 
-    private void initializeLabels() {
-        statusLabel = new Label(
-                "Status: " + mission.getCurrentState().toString()
-        );
-    }
+        HBox statusRow = createInfoRow("STATUS", statusValue);
+        HBox eventRow = createInfoRow("ACTIVE EVENT", activeEventValue);
+        HBox objectiveRow = createInfoRow("OBJECTIVE", objectiveValue);
 
-    private void initializeLaunchButton() {
         launchButton = new Button("Launch");
-        launchButton.setPrefWidth(240);
+        styleButton(launchButton, "#1C745B");
         launchButton.setPrefHeight(45);
         launchButton.setMinHeight(40);
-        launchButton.setDisable(false);
-
         launchButton.setOnAction(event -> {
             mission.launch();
-
-            statusLabel.setText(
-                    "Status: " + mission.getCurrentState().toString()
-            );
-
+            updateMissionStatus();
             launchButton.setDisable(true);
-
             if (onLaunch != null) {
                 onLaunch.run();
             }
         });
-    }
 
-    private void initializeDeployButton() {
         deployButton = new Button("Deploy Satellite");
-        deployButton.setPrefWidth(240);
+        styleButton(deployButton, "#225B87");
         deployButton.setPrefHeight(45);
         deployButton.setMinHeight(40);
         deployButton.setDisable(true);
-
         deployButton.setOnAction(event -> {
             if (onDeploy != null) {
                 onDeploy.run();
             }
         });
+
+        getChildren().addAll(missionTitle, statusRow, eventRow,
+                objectiveRow, launchButton, deployButton);
+        updateMissionStatus();
     }
 
+    private static HBox createInfoRow(String captionText, Label value) {
+        Label caption = new Label(captionText);
+        styleLabel(caption, "#9AA8B7", 11, true);
+        caption.setMinWidth(Region.USE_PREF_SIZE);
 
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        value.setTextAlignment(TextAlignment.RIGHT);
+        value.setAlignment(Pos.CENTER_RIGHT);
+        value.setWrapText(true);
 
-
-
-
-    private void initializeEventConsole() {
-        eventOptionsList = new ListView<>();
-        eventOptionsList.setPrefHeight(120);
-        eventOptionsList.setStyle(
-                "-fx-control-inner-background: #101820;"
-                        + "-fx-background-color: #101820;"
-                        + "-fx-text-fill: #c400ff;"
-                        + "-fx-font-family: 'Monospaced';"
-                        + "-fx-font-size: 13px;"
-        );
-
-
-
-        eventOptionsList.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ENTER) {
-                int selectedIndex = eventOptionsList
-                        .getSelectionModel()
-                        .getSelectedIndex();
-
-                if (selectedIndex >= 0 && onEventResponse != null) {
-                    onEventResponse.accept(selectedIndex);
-                }
-
-                event.consume();
-            }
-        });
-
-
-        eventOptionsList.setDisable(true);
+        HBox row = new HBox(8, caption, spacer, value);
+        row.setAlignment(Pos.CENTER_LEFT);
+        return row;
     }
 
+    private static Label createValue(String text, String color) {
+        Label value = new Label(text);
+        styleLabel(value, color, 12, false);
+        return value;
+    }
 
+    private static void styleLabel(Label label, String color, int size, boolean bold) {
+        label.setStyle("-fx-font-family: " + FONT + ";"
+                + "-fx-font-size: " + size + "px;"
+                + (bold ? "-fx-font-weight: bold;" : "")
+                + "-fx-text-fill: " + color + ";");
+    }
 
-
-
-
-    private void initializeLayout() {
-        Label missionTitle = new Label("Mission / Events");
-        activeEventLabel = new Label("Active Event: None");
-        Label objectiveLabel = new Label("Objective: Deploy satellite");
-
-        getChildren().addAll(
-                missionTitle,
-                statusLabel,
-                activeEventLabel,
-                objectiveLabel,
-                eventOptionsList,
-                launchButton,
-                deployButton
-        );
+    private static void styleButton(Button button, String color) {
+        button.setMaxWidth(Double.MAX_VALUE);
+        button.setStyle("-fx-background-color: " + color + ";"
+                + "-fx-background-radius: 5;"
+                + "-fx-text-fill: white; -fx-font-weight: bold;"
+                + "-fx-font-family: " + FONT + ";"
+                + "-fx-font-size: 13px;");
     }
 
     public void setOnLaunch(Runnable onLaunch) {
@@ -153,59 +118,36 @@ public class MissionPane extends VBox {
         this.onDeploy = onDeploy;
     }
 
-    public void setOnEventResponse(Consumer<Integer> onEventResponse) {
-        this.onEventResponse = onEventResponse;
-    }
-
     public void updateMissionStatus() {
         Mission.MissionState state = mission.getCurrentState();
-
+        // Symbols and friendly labels are presentation only; the enum remains unchanged.
         switch (state) {
-            case SUCCESS:
-                statusLabel.setText("Status: Mission Successful!");
-                break;
-
-            case FAILURE:
-                statusLabel.setText("Status: Mission Failed!");
-                break;
-
-            default:
-                statusLabel.setText("Status: " + state);
-                break;
+            case PRE_LAUNCH -> setStatus("○  PRE-LAUNCH", "#CBD5E1");
+            case ASCENT -> setStatus("↑  ASCENDING", "#63C7FF");
+            case ORBIT -> setStatus("◎  IN ORBIT", "#A5B4FC");
+            case DEPLOYMENT -> setStatus("↗  DEPLOYING", "#F5C86A");
+            case SUCCESS -> setStatus("✓  SUCCESS", "#86EFAC");
+            case FAILURE -> setStatus("✕  FAILURE", "#FF7474");
         }
-
         deployButton.setDisable(state != Mission.MissionState.ORBIT);
     }
 
-
-
-    public void displayMissionEvent(MissionEvent event) {
-        activeEventLabel.setText("Active Event: " + event);
-
-        eventOptionsList.getItems().clear();
-
-        switch (event) {
-            case ENGINE_OVERHEATING:
-                eventOptionsList.getItems().addAll(
-                        "1. Reduce engine throttle",
-                        "2. Activate emergency cooling",
-                        "3. Ignore warning"
-                );
-                break;
-        }
-
-        eventOptionsList.setDisable(false);
-
-        //enables  console and selects the first response
-        eventOptionsList.getSelectionModel().selectFirst();
+    private void setStatus(String text, String color) {
+        statusValue.setText(text);
+        styleLabel(statusValue, color, 12, true);
     }
 
+    public void displayMissionEvent(MissionEvent event) {
+        switch (event) {
+            case ENGINE_OVERHEATING -> {
+                activeEventValue.setText("ENGINE OVERHEATING");
+                styleLabel(activeEventValue, "#F2C47B", 12, true);
+            }
+        }
+    }
 
     public void clearMissionEvent() {
-        activeEventLabel.setText("Active Event: None");
-
-        eventOptionsList.getItems().clear();
-        eventOptionsList.getSelectionModel().clearSelection();
-        eventOptionsList.setDisable(true);
+        activeEventValue.setText("None");
+        styleLabel(activeEventValue, "#9AA8B7", 12, false);
     }
 }

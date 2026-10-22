@@ -10,6 +10,8 @@ com/example/rocketmissionsimulatormodule/view/MissionLogPane$1.class
 com/example/rocketmissionsimulatormodule/view/MissionPane.class
 com/example/rocketmissionsimulatormodule/view/components/FlightView.class
 com/example/rocketmissionsimulatormodule/view/components/RecoveryNotification.class
+com/example/rocketmissionsimulatormodule/view/TelemetryPane$Meter.class
+com/example/rocketmissionsimulatormodule/view/components/SuccessOverlay.class
 com/example/rocketmissionsimulatormodule/view/TelemetryPane.class
 com/example/rocketmissionsimulatormodule/view/SimulationPane.class
 com/example/rocketmissionsimulatormodule/util/Mission.class

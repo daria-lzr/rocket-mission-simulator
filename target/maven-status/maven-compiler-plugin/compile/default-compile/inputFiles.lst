@@ -11,4 +11,5 @@
 /Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/com/example/rocketmissionsimulatormodule/view/components/FailureOverlay.java
 /Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/com/example/rocketmissionsimulatormodule/view/components/FlightView.java
 /Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/com/example/rocketmissionsimulatormodule/view/components/RecoveryNotification.java
+/Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/com/example/rocketmissionsimulatormodule/view/components/SuccessOverlay.java
 /Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/module-info.java

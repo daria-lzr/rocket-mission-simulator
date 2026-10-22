@@ -1,8 +1,10 @@
 package com.example.rocketmissionsimulatormodule.view;
 
+import com.example.rocketmissionsimulatormodule.util.MissionEvent;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Queue;
+import java.util.function.Consumer;
 import javafx.animation.AnimationTimer;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -12,6 +14,7 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
@@ -25,17 +28,30 @@ import javafx.util.Duration;
 public class MissionLogPane extends ScrollPane {
 
     private static final Duration LINE_DELAY = Duration.millis(420);
+    private static final String BUTTON_STYLE = "-fx-background-color: #111A20;"
+            + "-fx-border-color: #34434B; -fx-border-width: 1;"
+            + "-fx-text-fill: #F5F5F5; -fx-alignment: CENTER_LEFT;"
+            + "-fx-background-radius: 3; -fx-border-radius: 3;";
+    private static final String BUTTON_HOVER_STYLE = "-fx-background-color: #24333B;"
+            + "-fx-border-color: #8AC6D6; -fx-border-width: 1;"
+            + "-fx-text-fill: #FFFFFF; -fx-alignment: CENTER_LEFT;"
+            + "-fx-background-radius: 3; -fx-border-radius: 3;";
+
     private final Queue<String> pendingMessages = new ArrayDeque<>();
     private final TextFlow messages = new TextFlow();
     private final Text activity = new Text();
     private final VBox content = new VBox(5);
+    private final VBox eventPanel = new VBox(8);
     private final VBox responseCountdown = new VBox(5);
     private final StackPane countdownTrack = new StackPane();
     private final Region countdownFill = new Region();
     private final Text countdownLabel = new Text();
     private final DoubleProperty countdownFraction = new SimpleDoubleProperty(1.0);
-    private AnimationTimer countdownAnimation;
     private final Font font;
+
+    private AnimationTimer countdownAnimation;
+    private Timeline messageDelay;
+    private Consumer<Integer> onEventResponse;
     private boolean initializing = true;
     private boolean displayingMessage;
     private boolean ascending;
@@ -45,25 +61,24 @@ public class MissionLogPane extends ScrollPane {
         Font loaded = null;
         try (var stream = getClass().getResourceAsStream("/fonts/VT323-Regular.ttf")) {
             if (stream != null) {
-                loaded = Font.loadFont(stream, 22);
+                loaded = Font.loadFont(stream, 18);
             }
         } catch (IOException ex) {
-            // Optional font: use the built-in fallback.
+            // This font is optional; fall back to a standard monospace font.
         }
-        font = loaded != null ? loaded : Font.font("Monospaced", 16);
+        font = loaded != null ? loaded : Font.font("Monospaced", 14);
 
         setEditableAppearance();
         messages.setLineSpacing(3);
         activity.setFont(font);
         activity.setFill(Color.web("#BFC7D1"));
-        initializeCountdown();
-        content.getChildren().addAll(messages, responseCountdown, activity);
+        initializeEventPanel();
+        content.getChildren().addAll(messages, eventPanel, activity);
         content.setPadding(new Insets(12));
         content.setStyle("-fx-background-color: #050807;");
         setContent(content);
 
-        // Keep the newest entry in view, including when messages wrap.
-        content.heightProperty().addListener((obs, oldValue, newValue) -> setVvalue(1.0));
+        content.heightProperty().addListener((obs, oldHeight, newHeight) -> setVvalue(1.0));
 
         addEntry("OBJECTIVE: Reach orbit and deploy the satellite.");
         addEntry("NEXT STEP: Press Launch to begin.");
@@ -71,7 +86,7 @@ public class MissionLogPane extends ScrollPane {
 
         Timeline activityAnimation = new Timeline(
                 new KeyFrame(Duration.millis(400), e -> {
-                    if (ascending && !responseCountdown.isVisible()
+                    if (ascending && !eventPanel.isVisible()
                             && !initializing && !displayingMessage && pendingMessages.isEmpty()) {
                         dots = (dots + 1) % 4;
                         activity.setText("> ASCENT IN PROGRESS" + ".".repeat(dots));
@@ -83,7 +98,23 @@ public class MissionLogPane extends ScrollPane {
         activityAnimation.play();
     }
 
-    private void initializeCountdown() {
+    private void setEditableAppearance() {
+        setFitToWidth(true);
+        setHbarPolicy(ScrollBarPolicy.NEVER);
+        setPrefHeight(320);
+        setMinHeight(320);
+        setMaxHeight(320);
+        setFocusTraversable(false);
+        setStyle("-fx-background: #050807; -fx-background-color: #050807;"
+                + "-fx-border-color: #252B30;");
+    }
+
+    private void initializeEventPanel() {
+        Text actionLabel = new Text("> SELECT EMERGENCY RESPONSE:");
+        actionLabel.setFont(font);
+        actionLabel.setFill(Color.web("#F5C86A"));
+        eventPanel.getChildren().add(actionLabel);
+
         countdownLabel.setFont(font);
         countdownLabel.setFill(Color.web("#FFCE72"));
         countdownLabel.setText("> RESPONSE TIME: 10.0s");
@@ -110,23 +141,67 @@ public class MissionLogPane extends ScrollPane {
         StackPane.setAlignment(countdownFill, Pos.CENTER_LEFT);
 
         responseCountdown.getChildren().addAll(countdownLabel, countdownTrack);
-        VBox.setMargin(responseCountdown, new Insets(6, 0, 8, 0));
-        responseCountdown.setVisible(false);
-        responseCountdown.setManaged(false);
+        VBox.setMargin(responseCountdown, new Insets(3, 0, 4, 0));
+        eventPanel.setPadding(new Insets(8, 0, 6, 0));
+        eventPanel.setVisible(false);
+        eventPanel.setManaged(false);
     }
 
-    /** Display a countdown inside the mission log, using the controller's actual deadline. */
-    public void showResponseCountdown(long deadlineNanos, long durationNanos) {
+    /** Connect the clickable options to the existing mission controller. */
+    public void setOnEventResponse(Consumer<Integer> handler) {
+        onEventResponse = handler;
+    }
+
+    /** Show the warning, response buttons, and existing deadline-based countdown together. */
+    public void showEventPrompt(MissionEvent event, long deadlineNanos, long durationNanos) {
         if (!Platform.isFxApplicationThread()) {
-            Platform.runLater(() -> showResponseCountdown(deadlineNanos, durationNanos));
+            Platform.runLater(() -> showEventPrompt(event, deadlineNanos, durationNanos));
             return;
         }
-        hideResponseCountdown();
-        responseCountdown.setManaged(true);
-        responseCountdown.setVisible(true);
-        countdownFraction.set(1.0);
-        activity.setText("");
 
+        hideEventPrompt();
+
+        // Important: emergency messages must never wait in the animated text queue.
+        // Finish any earlier messages first, preserving the chronological log.
+        flushPendingMessages();
+
+        if (event == MissionEvent.ENGINE_OVERHEATING) {
+            appendMessage("WARNING: Engine overheating detected!");
+            appendMessage("INSTRUCTION: Select a response within 10 seconds.");
+
+            addResponseButton("[1] REDUCE ENGINE THROTTLE", 0);
+            addResponseButton("[2] ACTIVATE EMERGENCY COOLING", 1);
+            addResponseButton("[3] IGNORE WARNING", 2);
+        }
+
+        eventPanel.getChildren().add(responseCountdown);
+        eventPanel.setVisible(true);
+        eventPanel.setManaged(true);
+        activity.setText("");
+        setVvalue(1.0);
+        startResponseCountdown(deadlineNanos, durationNanos);
+    }
+
+    private void addResponseButton(String label, int index) {
+        Button button = new Button(label);
+        button.setFont(font);
+        button.setMinHeight(34);
+        button.setPrefHeight(34);
+        button.setMaxWidth(440);
+        button.setStyle(BUTTON_STYLE);
+        button.setOnMouseEntered(e -> button.setStyle(BUTTON_HOVER_STYLE));
+        button.setOnMouseExited(e -> button.setStyle(BUTTON_STYLE));
+        button.setOnAction(e -> {
+            button.setDisable(true);
+            if (onEventResponse != null) {
+                onEventResponse.accept(index);
+            }
+        });
+        eventPanel.getChildren().add(button);
+    }
+
+    private void startResponseCountdown(long deadlineNanos, long durationNanos) {
+        countdownFraction.set(1.0);
         countdownAnimation = new AnimationTimer() {
             @Override
             public void handle(long now) {
@@ -139,7 +214,6 @@ public class MissionLogPane extends ScrollPane {
                 String color = fraction > 0.5 ? "#6BE6A5"
                         : fraction > 0.2 ? "#F5C86A" : "#FF7474";
                 countdownFill.setStyle("-fx-background-color: " + color + ";");
-                setVvalue(1.0);
                 if (remaining == 0) {
                     stop();
                 }
@@ -148,27 +222,21 @@ public class MissionLogPane extends ScrollPane {
         countdownAnimation.start();
     }
 
-    public void hideResponseCountdown() {
+    /** Remove controls as soon as a response is chosen or the mission ends. */
+    public void hideEventPrompt() {
         if (!Platform.isFxApplicationThread()) {
-            Platform.runLater(this::hideResponseCountdown);
+            Platform.runLater(this::hideEventPrompt);
             return;
         }
         if (countdownAnimation != null) {
             countdownAnimation.stop();
             countdownAnimation = null;
         }
-        responseCountdown.setVisible(false);
-        responseCountdown.setManaged(false);
-    }
-
-    private void setEditableAppearance() {
-        setFitToWidth(true);
-        setHbarPolicy(ScrollBarPolicy.NEVER);
-        setPrefHeight(230);
-        setMinHeight(190);
-        setFocusTraversable(false);
-        setStyle("-fx-background: #050807; -fx-background-color: #050807;"
-                + "-fx-border-color: #252B30;");
+        // Preserve the first heading; rebuild the buttons for the next event.
+        eventPanel.getChildren().removeIf(node -> node instanceof Button);
+        eventPanel.getChildren().remove(responseCountdown);
+        eventPanel.setVisible(false);
+        eventPanel.setManaged(false);
     }
 
     private void animateStartup() {
@@ -213,14 +281,29 @@ public class MissionLogPane extends ScrollPane {
             return;
         }
         displayingMessage = true;
-        Timeline delay = new Timeline(new KeyFrame(LINE_DELAY, e -> {
-            String message = pendingMessages.remove();
-            messages.getChildren().add(createText("> " + message + "\n", colorFor(message)));
-            setVvalue(1.0);
+        messageDelay = new Timeline(new KeyFrame(LINE_DELAY, e -> {
+            appendMessage(pendingMessages.remove());
             displayingMessage = false;
+            messageDelay = null;
             showNextMessage();
         }));
-        delay.play();
+        messageDelay.play();
+    }
+
+    private void flushPendingMessages() {
+        if (messageDelay != null) {
+            messageDelay.stop();
+            messageDelay = null;
+        }
+        displayingMessage = false;
+        while (!pendingMessages.isEmpty()) {
+            appendMessage(pendingMessages.remove());
+        }
+    }
+
+    private void appendMessage(String message) {
+        messages.getChildren().add(createText("> " + message + "\n", colorFor(message)));
+        setVvalue(1.0);
     }
 
     private Text createText(String value, Color color) {

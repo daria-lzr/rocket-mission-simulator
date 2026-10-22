@@ -9,6 +9,7 @@ import com.example.rocketmissionsimulatormodule.view.TelemetryPane;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -38,9 +39,7 @@ public class RocketMissionSimulatorApplication extends Application {
         });
 
 
-        missionPane.setOnEventResponse(selectedIndex -> {
-            missionController.handleEventResponse(selectedIndex);
-        });
+        missionLogPane.setOnEventResponse(missionController::handleEventResponse);
 
 
 
@@ -48,13 +47,13 @@ public class RocketMissionSimulatorApplication extends Application {
 
 
 
-        VBox rightVBox = createRightSidebar(missionPane, telemetryPane);
+        ScrollPane rightSidebar = createRightSidebar(missionPane, telemetryPane);
         //assemble  main layout
         mainPane.setCenter(simulationPane);
-        mainPane.setRight(rightVBox);
+        mainPane.setRight(rightSidebar);
         mainPane.setBottom(missionLogPane);
 
-        Scene scene = new Scene(mainPane, 1200, 750);
+        Scene scene = new Scene(mainPane, 1400, 900);
         stage.setTitle("Rocket Mission Simulator");
         stage.setScene(scene);
         stage.show();
@@ -63,17 +62,19 @@ public class RocketMissionSimulatorApplication extends Application {
 
 
 
-    private static VBox createRightSidebar(MissionPane missionPane, TelemetryPane telemetryPane) {
-        VBox rightVBox = new VBox();
+    private static ScrollPane createRightSidebar(MissionPane missionPane,
+                                                 TelemetryPane telemetryPane) {
+        VBox rightVBox = new VBox(telemetryPane, missionPane);
         rightVBox.setSpacing(10);
         rightVBox.setPrefWidth(280);
+        rightVBox.setStyle("-fx-background-color: #050807;");
 
-        rightVBox.getChildren().addAll(
-                telemetryPane,
-                missionPane
-        );
-
-        return rightVBox;
+        ScrollPane sidebar = new ScrollPane(rightVBox);
+        sidebar.setFitToWidth(true);
+        sidebar.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        sidebar.setPrefWidth(290);
+        sidebar.setStyle("-fx-background: #050807; -fx-background-color: #050807;");
+        return sidebar;
     }
 
 }

@@ -25,6 +25,8 @@ public class Rocket {
 
     public double getVelocity() { return velocity; }
 
+    public double getThrottle() { return throttle; }
+
     public double getFuelPercent() { return fuelPercent; }
 
     public double getEffectiveThrottle() {

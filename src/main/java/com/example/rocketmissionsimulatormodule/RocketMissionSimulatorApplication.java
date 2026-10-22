@@ -6,6 +6,7 @@ import com.example.rocketmissionsimulatormodule.view.MissionLogPane;
 import com.example.rocketmissionsimulatormodule.view.MissionPane;
 import com.example.rocketmissionsimulatormodule.view.SimulationPane;
 import com.example.rocketmissionsimulatormodule.view.TelemetryPane;
+import com.example.rocketmissionsimulatormodule.view.FlightControlsPane;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -24,7 +25,15 @@ public class RocketMissionSimulatorApplication extends Application {
         TelemetryPane telemetryPane = new TelemetryPane();
         SimulationPane simulationPane = new SimulationPane();
 
+        FlightControlsPane flightControlsPane = new FlightControlsPane();
+
         MissionController missionController = new MissionController(mission, telemetryPane, simulationPane, missionPane);
+
+        //connect the throttle slider to the rocket through the controller
+        flightControlsPane.setOnThrottleChanged(
+                missionController::setThrottle
+        );
+
 
         missionPane.setOnLaunch(() -> {
             missionController.startSimulation();
@@ -46,7 +55,7 @@ public class RocketMissionSimulatorApplication extends Application {
 
 
 
-        VBox rightVBox = createRightSidebar(missionPane, telemetryPane);
+        VBox rightVBox = createRightSidebar(missionPane, telemetryPane, flightControlsPane);
         MissionLogPane missionLogPane = new MissionLogPane();
 
         //assemble  main layout
@@ -63,13 +72,18 @@ public class RocketMissionSimulatorApplication extends Application {
 
 
 
-    private static VBox createRightSidebar(MissionPane missionPane, TelemetryPane telemetryPane) {
+    private static VBox createRightSidebar(
+            MissionPane missionPane,
+            TelemetryPane telemetryPane,
+            FlightControlsPane flightControlsPane) {
+
         VBox rightVBox = new VBox();
         rightVBox.setSpacing(10);
         rightVBox.setPrefWidth(280);
 
         rightVBox.getChildren().addAll(
                 telemetryPane,
+                flightControlsPane,
                 missionPane
         );
 

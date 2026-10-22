@@ -7,20 +7,18 @@ import javafx.scene.layout.VBox;
 
 public class TelemetryPane extends VBox {
 
-    private Label altitudeLabel;
-    private Label velocityLabel;
+    private final Label telemetryTitle = new Label("Telemetry");
+    private final Label altitudeLabel = new Label("Altitude: 0 km");
+    private final Label velocityLabel = new Label("Velocity: 0 m/s");
+    private final Label fuelLabel = new Label("Fuel remaining: 100%");
+    private final Label throttleLabel = new Label("Throttle: 0%");
+    private final Label orientationLabel = new Label("Orientation: 0°");
+    private final Label engineOutputLabel = new Label("Engine output: 100%");
 
     public TelemetryPane() {
         setPadding(new Insets(15));
         setSpacing(10);
         setStyle("-fx-background-color: #E2E8F0;");
-
-        Label telemetryTitle = new Label("Telemetry");
-        altitudeLabel = new Label("Altitude: 0 km");
-        velocityLabel = new Label("Velocity: 0 m/s");
-        Label fuelLabel = new Label("Fuel: 100%");
-        Label throttleLabel = new Label("Throttle: 0%");
-        Label orientationLabel = new Label("Orientation: 0°");
 
         getChildren().addAll(
                 telemetryTitle,
@@ -33,13 +31,31 @@ public class TelemetryPane extends VBox {
     }
 
 
-    public void updateTelemetry(double altitude, double velocity) {
+    public void updateTelemetry(double altitude,
+                                double velocity,
+                                double fuelPercent,
+                                double throttle,
+                                double effectiveThrottle)
+    {
         altitudeLabel.setText(
                 String.format("Altitude: %.2f m", altitude)
         );
 
         velocityLabel.setText(
                 String.format("Velocity: %.2f m/s", velocity)
+        );
+
+        fuelLabel.setText(
+                String.format("Fuel remaining: %.1f%%", fuelPercent)
+        );
+
+        throttleLabel.setText(
+                String.format("Throttle: %.0f%%", throttle * 100.0)
+        );
+
+        engineOutputLabel.setText(
+                String.format("Engine output: %.0f%%",
+                        effectiveThrottle * 100.0)
         );
     }
 }

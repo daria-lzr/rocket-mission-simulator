@@ -47,6 +47,14 @@ public class SimulationPane extends Pane {
         flightView.updateRocketPosition(altitude);
     }
 
+    public void updateThrust(
+            double effectiveThrottle,
+            boolean hasFuel) {
+        flightView.updateThrust(
+                effectiveThrottle,
+                hasFuel);
+    }
+
     public void showSatellite(Runnable onSeparationFinished) {
         flightView.showSatellite(onSeparationFinished);
     }

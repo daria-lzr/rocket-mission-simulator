@@ -3,6 +3,7 @@ package com.example.rocketmissionsimulatormodule.util;
 import com.example.rocketmissionsimulatormodule.view.MissionPane;
 import com.example.rocketmissionsimulatormodule.view.SimulationPane;
 import com.example.rocketmissionsimulatormodule.view.TelemetryPane;
+import com.example.rocketmissionsimulatormodule.util.Rocket;
 
 
 import java.util.concurrent.Executors;
@@ -49,11 +50,20 @@ public class MissionController {
 
     private void updateSimulation() {
         if (mission.getCurrentState() == Mission.MissionState.ASCENT) {
-            mission.getRocket().updateFlight(TIME_STEP);
+            //get the rocket model
+            Rocket rocket = mission.getRocket();
 
-            double altitude = mission.getRocket().getAltitude();
-            double velocity = mission.getRocket().getVelocity();
+            //advance the simulation by one time step
+            rocket.updateFlight(TIME_STEP);
 
+            //read the latest simulation values
+            double altitude = rocket.getAltitude();
+            double velocity = rocket.getVelocity();
+            double throttle = rocket.getThrottle();
+            double fuelPercent = rocket.getFuelPercent();
+            double effectiveThrottle = rocket.getEffectiveThrottle();
+
+            //preserve the existing mission-event logic
             checkMissionEvents(altitude);
 
             boolean orbitReached = false;
@@ -72,8 +82,12 @@ public class MissionController {
              *
              */
             Platform.runLater(() -> {
-                telemetryPane.updateTelemetry(altitude, velocity);
+                telemetryPane.updateTelemetry(
+                        altitude, velocity, fuelPercent, throttle, effectiveThrottle
+                );
                 simulationPane.updateRocketPosition(altitude);
+                simulationPane.updateThrust(effectiveThrottle, fuelPercent > 0.0);
+
                 missionPane.updateMissionStatus();
 
                 checkEventTimeout();
@@ -228,7 +242,7 @@ public class MissionController {
         recoveryDelay.play();
     }
 
-
-
-
+    public void setThrottle(double throttle){
+        mission.getRocket().setThrottle(throttle);
+    }
 }

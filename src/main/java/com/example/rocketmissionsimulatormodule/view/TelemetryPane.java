@@ -100,7 +100,7 @@ public class TelemetryPane extends VBox {
             fill.setPrefHeight(6);
             fill.setMinWidth(0);
             fill.setMaxWidth(Region.USE_PREF_SIZE);
-            fill.prefWidthProperty().bind(track.widthProperty().subtract(8).multiply(Math.max(0.0, Math.min(1.0, progress))));
+            fill.prefWidthProperty().bind(track.widthProperty().subtract(8).multiply(Math.clamp(progress, 0.0, 1.0)));
             track.getChildren().add(fill);
             StackPane.setAlignment(fill, Pos.CENTER_LEFT);
             StackPane.setMargin(fill, new Insets(0, 4, 0, 4));

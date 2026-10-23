@@ -119,7 +119,7 @@ public class MissionPane extends VBox {
 
     public void updateMissionStatus() {
         Mission.MissionState state = mission.getCurrentState();
-        // Symbols and friendly labels are presentation only; the enum remains unchanged.
+        //symbols and friendly labels
         switch (state) {
             case PRE_LAUNCH -> setStatus("○  PRE-LAUNCH", "#CBD5E1");
             case ASCENT -> setStatus("↑  ASCENDING", "#63C7FF");

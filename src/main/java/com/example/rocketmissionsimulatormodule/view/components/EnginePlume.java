@@ -83,8 +83,7 @@ public class EnginePlume extends Canvas {
     }
 
     private void renderFrame(long now) {
-        double elapsedSeconds = lastFrameNanos == 0L
-                ? 1.0 / 60.0 : Math.min(0.1, (now - lastFrameNanos) / 1_000_000_000.0);
+        double elapsedSeconds = lastFrameNanos == 0L ? 1.0 / 60.0 : Math.min(0.1, (now - lastFrameNanos) / 1_000_000_000.0);
         lastFrameNanos = now;
 
         if (igniting) {
@@ -154,18 +153,12 @@ public class EnginePlume extends Canvas {
         }
     }
 
-    private void drawSingleEngine(double nozzleCenterX,
-                                  double enginePower,
-                                  double altitudeExpansion,
-                                  double ascentStretch,
-                                  double time,
-                                  int engineIndex) {
+    private void drawSingleEngine(double nozzleCenterX, double enginePower, double altitudeExpansion, double ascentStretch, double time, int engineIndex) {
         double flicker = 1.0
                 + 0.05 * Math.sin(time * (28.0 + engineIndex * 1.5) + engineIndex)
                 + 0.025 * Math.sin(time * (44.0 + engineIndex) + 0.9 * engineIndex);
 
-        double plumeLength = Math.min(HEIGHT - 18.0,
-                (13.0 + 46.0 * Math.pow(enginePower, 0.86)) * ascentStretch * flicker);
+        double plumeLength = Math.min(HEIGHT - 18.0, (13.0 + 46.0 * Math.pow(enginePower, 0.86)) * ascentStretch * flicker);
         double outerBottomRadius = (2.5 + 2.6 * enginePower) * altitudeExpansion;
         double innerBottomRadius = (1.15 + 1.55 * enginePower) * altitudeExpansion;
         double topOuterRadius = 1.8 + 0.45 * enginePower;
@@ -205,10 +198,7 @@ public class EnginePlume extends Canvas {
                 glowRadius * 2.0, glowRadius * 2.0);
     }
 
-    private void drawShockDiamonds(double centerX,
-                                   double plumeLength,
-                                   double innerBottomRadius,
-                                   double enginePower) {
+    private void drawShockDiamonds(double centerX, double plumeLength, double innerBottomRadius, double enginePower) {
         if (enginePower < 0.24) {
             return;
         }
@@ -251,12 +241,7 @@ public class EnginePlume extends Canvas {
         graphics.fillPolygon(x, y, count);
     }
 
-    private void drawPlumeShape(double center,
-                                double length,
-                                double topRadius,
-                                double bottomRadius,
-                                double time,
-                                double phase) {
+    private void drawPlumeShape(double center, double length, double topRadius, double bottomRadius, double time, double phase) {
         int segments = 16;
         int count = (segments + 1) * 2;
         double[] x = new double[count];
@@ -265,8 +250,7 @@ public class EnginePlume extends Canvas {
         for (int i = 0; i <= segments; i++) {
             double progress = i / (double) segments;
             double halfWidth = topRadius + (bottomRadius - topRadius) * Math.pow(progress, 0.84);
-            double sway = progress * (Math.sin(time * 15.0 + phase + progress * 8.0) * 0.95
-                    + Math.sin(time * 23.0 + phase * 1.4 + progress * 11.0) * 0.45);
+            double sway = progress * (Math.sin(time * 15.0 + phase + progress * 8.0) * 0.95 + Math.sin(time * 23.0 + phase * 1.4 + progress * 11.0) * 0.45);
             double vertical = 10.0 + progress * length;
             x[i] = center + sway - halfWidth;
             y[i] = vertical;
@@ -279,10 +263,8 @@ public class EnginePlume extends Canvas {
 
     private double enginePowerForIndex(int index, double globalPower, double time) {
         if (igniting && ignitionStartNanos != 0L) {
-            double ignitionProgress = (lastFrameNanos - ignitionStartNanos)
-                    / (double) IGNITION_DURATION_NANOS;
-            double stagedProgress = Math.clamp((ignitionProgress - IGNITION_DELAYS[index]) / 0.42,
-                    0.0, 1.0);
+            double ignitionProgress = (lastFrameNanos - ignitionStartNanos) / (double) IGNITION_DURATION_NANOS;
+            double stagedProgress = Math.clamp((ignitionProgress - IGNITION_DELAYS[index]) / 0.42, 0.0, 1.0);
             return globalPower * smoothstep(stagedProgress);
         }
 

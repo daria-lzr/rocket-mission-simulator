@@ -66,7 +66,7 @@ public class MissionLogPane extends ScrollPane {
                 loaded = Font.loadFont(stream, 18);
             }
         } catch (IOException ex) {
-            // this font is optional; fall back to a standard monospace font
+            //this font is optional; fall back to a standard monospace font
         }
         font = loaded != null ? loaded : Font.font("Monospaced", 14);
 
@@ -244,7 +244,7 @@ public class MissionLogPane extends ScrollPane {
         countdownAnimation.start();
     }
 
-    // remove controls as soon as a response is chosen or the mission ends
+    //remove controls as soon as a response is chosen or the mission ends
     public void hideEventPrompt() {
         if (!Platform.isFxApplicationThread()) {
             Platform.runLater(this::hideEventPrompt);
@@ -254,7 +254,8 @@ public class MissionLogPane extends ScrollPane {
             countdownAnimation.stop();
             countdownAnimation = null;
         }
-        // preserve the first heading; rebuild the buttons for the next event
+        //preserve the first heading
+        //rebuild the buttons for the next event
         eventPanel.getChildren().removeIf(node -> node instanceof Button);
         eventPanel.getChildren().remove(responseCountdown);
         eventPanel.setVisible(false);
@@ -278,7 +279,9 @@ public class MissionLogPane extends ScrollPane {
         startupAnimation.play();
     }
 
-    /** Release running timelines before replacing the entire mission screen. */
+
+     //Stops all running animations and timers and clears any pending messages
+     // used when restarting the mission so that the old mission log doesn't keep running in the background
     public void dispose() {
         setAscending(false);
         hideEventPrompt();

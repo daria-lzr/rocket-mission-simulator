@@ -9,7 +9,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
-/** Green mission-complete counterpart to FailureOverlay. */
 public class SuccessOverlay extends StackPane {
 
     public SuccessOverlay() {

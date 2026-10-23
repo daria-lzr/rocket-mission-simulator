@@ -23,8 +23,7 @@ public class FailureOverlay extends StackPane {
                         + "-fx-font-weight: bold;"
         );
 
-        Label failureDescription =
-                new Label("CRITICAL ENGINE MALFUNCTION");
+        Label failureDescription = new Label("CRITICAL ENGINE MALFUNCTION");
 
         failureDescription.setStyle(
                 "-fx-text-fill: #FECACA;"

@@ -13,14 +13,12 @@ public class Rocket {
     private static final double DRAG_COEFFICIENT = 0.30;
     private static final double CROSS_SECTION_M2 = 63.6;
 
-    // Illustrative single-stage vehicle, not measured Starship values.
     private static final double DRY_MASS_KG = 150_000.0;
     private static final double INITIAL_PROPELLANT_KG = 350_000.0;
     private static final double SEA_LEVEL_THRUST_N = 10_000_000.0;
     private static final double SEA_LEVEL_ISP_S = 330.0;
     private static final double VACUUM_ISP_S = 370.0;
-    private static final double FULL_THROTTLE_MASS_FLOW_KG_S =
-            SEA_LEVEL_THRUST_N / (SEA_LEVEL_ISP_S * G0);
+    private static final double FULL_THROTTLE_MASS_FLOW_KG_S = SEA_LEVEL_THRUST_N / (SEA_LEVEL_ISP_S * G0);
 
     private static final double MAX_DYNAMIC_PRESSURE_PA = 25_000.0;
     private static final double MAX_NET_ACCELERATION_M_S2 = 3.0 * G0;
@@ -50,7 +48,7 @@ public class Rocket {
         targetApogeeMeters = targetAltitudeMeters + APOGEE_MARGIN_M;
     }
 
-    /** Advance the model using a positive interval in simulated seconds. */
+    // advance the model using a positive interval in simulated seconds
     public synchronized void updateFlight(double deltaTime) {
         if (!(deltaTime > 0.0) || !Double.isFinite(deltaTime)) {
             throw new IllegalArgumentException("deltaTime must be positive and finite");
@@ -61,25 +59,23 @@ public class Rocket {
 
         double density = SEA_LEVEL_DENSITY * Math.exp(-altitude / ATMOSPHERE_SCALE_HEIGHT_M);
         double gravity = G0 * Math.pow(EARTH_RADIUS_M / (EARTH_RADIUS_M + altitude), 2);
-        double isp = VACUUM_ISP_S
-                - (VACUUM_ISP_S - SEA_LEVEL_ISP_S) * density / SEA_LEVEL_DENSITY;
+        double isp = VACUUM_ISP_S - (VACUUM_ISP_S - SEA_LEVEL_ISP_S) * density / SEA_LEVEL_DENSITY;
         double dynamicPressure = 0.5 * density * velocity * velocity;
         double mass = DRY_MASS_KG + remainingPropellant;
         double fullThrust = FULL_THROTTLE_MASS_FLOW_KG_S * isp * G0;
-        double drag = 0.5 * density * DRAG_COEFFICIENT
-                * CROSS_SECTION_M2 * velocity * Math.abs(velocity);
+        double drag = 0.5 * density * DRAG_COEFFICIENT * CROSS_SECTION_M2 * velocity * Math.abs(velocity);
 
-        // Throttle back around max-Q, and avoid excessive net acceleration.
+        // throttle back around max-Q, and avoid excessive net acceleration
         double pressureThrottle = dynamicPressure > MAX_DYNAMIC_PRESSURE_PA
                 ? Math.max(0.62, Math.sqrt(MAX_DYNAMIC_PRESSURE_PA / dynamicPressure))
                 : 1.0;
         double accelerationThrottle = (mass * (MAX_NET_ACCELERATION_M_S2 + gravity) + drag)
                 / fullThrust;
         double automaticThrottle = Math.min(1.0,
-                Math.min(pressureThrottle, Math.max(0.0, accelerationThrottle)));
+                Math.clamp(accelerationThrottle, 0.0, pressureThrottle));
 
-        // Once above the dense atmosphere, predict the unpowered apogee from
-        // radial mechanical energy. Cut off early enough to coast to target.
+        // once above the dense atmosphere, predict the unpowered apogee from
+        // radial mechanical energy. Cut off early enough to coast to target
         if (!engineCutoff && altitude >= GUIDANCE_START_ALTITUDE_M && velocity > 0.0
                 && estimateUnpoweredApogee() >= targetApogeeMeters) {
             engineCutoff = true;
@@ -88,7 +84,7 @@ public class Rocket {
         throttle = engineCutoff || remainingPropellant <= 0.0 ? 0.0
                 : Math.min(automaticThrottle, throttleLimit) * recoveryThrottleFactor;
 
-        // The mass flow rate determines both consumed propellant and thrust.
+        // the mass flow rate determines both consumed propellant and thrust
         double requestedBurn = FULL_THROTTLE_MASS_FLOW_KG_S * throttle * deltaTime;
         double burned = Math.min(remainingPropellant, requestedBurn);
         double thrust = (burned / deltaTime) * isp * G0;
@@ -119,7 +115,7 @@ public class Rocket {
     }
 
     public synchronized double getAltitude() { return altitude; }
-    /** Signed vertical velocity: positive for upward flight (m/s). */
+    // signed vertical velocity: positive for upward flight (m/s)
     public synchronized double getVelocity() { return velocity; }
     public synchronized double getAcceleration() { return acceleration; }
     public synchronized double getFuelFraction() {
@@ -143,15 +139,15 @@ public class Rocket {
         return 0.5 * density * velocity * velocity;
     }
 
-    /** Optional player cap on automatic throttle (0 = engines off, 1 = no cap). */
+    // optional player cap on automatic throttle (0 = engines off, 1 = no cap)
     public synchronized void setThrottle(double value) {
         if (!Double.isFinite(value)) {
             throw new IllegalArgumentException("Throttle must be finite");
         }
-        throttleLimit = Math.max(0.0, Math.min(1.0, value));
+        throttleLimit = Math.clamp(value, 0.0, 1.0);
     }
 
-    /** Existing overheating response now limits thrust for its entire duration. */
+    // existing overheating response now limits thrust for its entire duration
     public synchronized void reduceAcceleration() {
         recoveryThrottleFactor = 0.5;
     }

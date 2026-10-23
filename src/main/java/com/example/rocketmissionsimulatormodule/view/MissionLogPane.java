@@ -64,7 +64,7 @@ public class MissionLogPane extends ScrollPane {
                 loaded = Font.loadFont(stream, 18);
             }
         } catch (IOException ex) {
-            // This font is optional; fall back to a standard monospace font.
+            // this font is optional; fall back to a standard monospace font
         }
         font = loaded != null ? loaded : Font.font("Monospaced", 14);
 
@@ -117,7 +117,7 @@ public class MissionLogPane extends ScrollPane {
 
         countdownLabel.setFont(font);
         countdownLabel.setFill(Color.web("#FFCE72"));
-        countdownLabel.setText("> RESPONSE TIME: 10.0s");
+        countdownLabel.setText("> RESPONSE TIME: 20.0s");
 
         countdownTrack.setPrefSize(440, 24);
         countdownTrack.setMaxWidth(440);
@@ -147,12 +147,11 @@ public class MissionLogPane extends ScrollPane {
         eventPanel.setManaged(false);
     }
 
-    /** Connect the clickable options to the existing mission controller. */
+
     public void setOnEventResponse(Consumer<Integer> handler) {
         onEventResponse = handler;
     }
 
-    /** Show the warning, response buttons, and existing deadline-based countdown together. */
     public void showEventPrompt(MissionEvent event, long deadlineNanos, long durationNanos) {
         if (!Platform.isFxApplicationThread()) {
             Platform.runLater(() -> showEventPrompt(event, deadlineNanos, durationNanos));
@@ -160,9 +159,6 @@ public class MissionLogPane extends ScrollPane {
         }
 
         hideEventPrompt();
-
-        // Important: emergency messages must never wait in the animated text queue.
-        // Finish any earlier messages first, preserving the chronological log.
         flushPendingMessages();
 
         if (event == MissionEvent.ENGINE_OVERHEATING) {
@@ -172,6 +168,30 @@ public class MissionLogPane extends ScrollPane {
             addResponseButton("[1] REDUCE ENGINE THROTTLE", 0);
             addResponseButton("[2] ACTIVATE EMERGENCY COOLING", 1);
             addResponseButton("[3] IGNORE WARNING", 2);
+        } else if (event == MissionEvent.AERODYNAMIC_STRESS) {
+            appendMessage("WARNING: High aerodynamic stress detected near Max-Q!");
+            appendMessage("INSTRUCTION: Select a response within 20 seconds.");
+
+            addResponseButton("[1] INCREASE THRUST TO EXIT DENSE AIR", 0);
+            addResponseButton("[2] REDUCE THROTTLE TO LOWER PRESSURE", 1);
+            addResponseButton("[3] ACTIVATE ATTITUDE-CONTROL THRUSTERS", 2);
+        } else if (event == MissionEvent.PROPELLANT_INSTABILITY) {
+            appendMessage("WARNING: Propellant oscillations detected!");
+            appendMessage("DIAGNOSTIC: Tank pressure NOMINAL; sloshing increasing.");
+            appendMessage("INSTRUCTION: Select a response within 20 seconds.");
+
+            addResponseButton("[1] INCREASE TANK PRESSURIZATION", 0);
+            addResponseButton("[2] APPLY RAPID ATTITUDE CORRECTIONS", 1);
+            addResponseButton("[3] ACTIVATE PROPELLANT SLOSH DAMPING", 2);
+        } else if (event == MissionEvent.ATTITUDE_CONTROL_FAILURE) {
+            appendMessage("WARNING: Attitude drift exceeds safe deployment limits!");
+            appendMessage("DIAGNOSTIC: Guidance ONLINE; main engine CUTOFF.");
+            appendMessage("DIAGNOSTIC: Primary RCS LOW; backup RCS NOMINAL.");
+            appendMessage("INSTRUCTION: Restore attitude control within 20 seconds.");
+
+            addResponseButton("[1] RESTART GUIDANCE COMPUTER", 0);
+            addResponseButton("[2] REIGNITE MAIN ENGINE", 1);
+            addResponseButton("[3] ISOLATE PRIMARY RCS / ENABLE BACKUP", 2);
         }
 
         eventPanel.getChildren().add(responseCountdown);
@@ -222,7 +242,7 @@ public class MissionLogPane extends ScrollPane {
         countdownAnimation.start();
     }
 
-    /** Remove controls as soon as a response is chosen or the mission ends. */
+    // remove controls as soon as a response is chosen or the mission ends
     public void hideEventPrompt() {
         if (!Platform.isFxApplicationThread()) {
             Platform.runLater(this::hideEventPrompt);
@@ -232,7 +252,7 @@ public class MissionLogPane extends ScrollPane {
             countdownAnimation.stop();
             countdownAnimation = null;
         }
-        // Preserve the first heading; rebuild the buttons for the next event.
+        // preserve the first heading; rebuild the buttons for the next event
         eventPanel.getChildren().removeIf(node -> node instanceof Button);
         eventPanel.getChildren().remove(responseCountdown);
         eventPanel.setVisible(false);
@@ -264,6 +284,16 @@ public class MissionLogPane extends ScrollPane {
         pendingMessages.add(message);
         activity.setText("");
         showNextMessage();
+    }
+
+    // display time-critical outcome explanations without the line-animation delay
+    public void addImmediateEntry(String message) {
+        if (!Platform.isFxApplicationThread()) {
+            Platform.runLater(() -> addImmediateEntry(message));
+            return;
+        }
+        flushPendingMessages();
+        appendMessage(message);
     }
 
     public void setAscending(boolean value) {
@@ -314,7 +344,8 @@ public class MissionLogPane extends ScrollPane {
     }
 
     private Color colorFor(String message) {
-        if (message.startsWith("WARNING:") || message.startsWith("FAILURE:")) {
+        if (message.startsWith("WARNING:") || message.startsWith("FAILURE:")
+                || message.startsWith("INCORRECT RESPONSE:") || message.startsWith("TIMEOUT:")) {
             return Color.web("#FF7474");
         }
         if (message.startsWith("SUCCESS:") || message.startsWith("RECOVERY:")

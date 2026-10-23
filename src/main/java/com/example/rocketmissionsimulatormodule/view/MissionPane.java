@@ -12,7 +12,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 
-/** Compact mission status and primary controls; event choices live in MissionLogPane. */
+
 public class MissionPane extends VBox {
 
     private static final String FONT = "'Avenir Next', 'Segoe UI', Arial, sans-serif";
@@ -31,7 +31,6 @@ public class MissionPane extends VBox {
         setSpacing(13);
         setStyle("-fx-background-color: #050807;");
 
-        // Match TelemetryPane: 16 px title, 11 px captions, 12 px values.
         Label missionTitle = new Label("MISSION / EVENTS");
         styleLabel(missionTitle, "#FFFFFF", 16, true);
 
@@ -141,6 +140,18 @@ public class MissionPane extends VBox {
         switch (event) {
             case ENGINE_OVERHEATING -> {
                 activeEventValue.setText("ENGINE OVERHEATING");
+                styleLabel(activeEventValue, "#F2C47B", 12, true);
+            }
+            case AERODYNAMIC_STRESS -> {
+                activeEventValue.setText("AERODYNAMIC STRESS (MAX-Q)");
+                styleLabel(activeEventValue, "#F2C47B", 12, true);
+            }
+            case PROPELLANT_INSTABILITY -> {
+                activeEventValue.setText("PROPELLANT INSTABILITY");
+                styleLabel(activeEventValue, "#F2C47B", 12, true);
+            }
+            case ATTITUDE_CONTROL_FAILURE -> {
+                activeEventValue.setText("ATTITUDE CONTROL FAILURE");
                 styleLabel(activeEventValue, "#F2C47B", 12, true);
             }
         }

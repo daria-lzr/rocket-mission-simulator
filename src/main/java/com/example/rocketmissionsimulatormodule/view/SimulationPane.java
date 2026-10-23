@@ -57,6 +57,18 @@ public class SimulationPane extends Pane {
         recoveryNotification.showNotification(cooling);
     }
 
+    public void showMaxQRecoveryNotification() {
+        recoveryNotification.showMaxQRecovery();
+    }
+
+    public void showPropellantRecoveryNotification() {
+        recoveryNotification.showPropellantRecovery();
+    }
+
+    public void showAttitudeRecoveryNotification() {
+        recoveryNotification.showAttitudeRecovery();
+    }
+
     public void showFailureAnimation() {
         failureOverlay.showFailure();
     }

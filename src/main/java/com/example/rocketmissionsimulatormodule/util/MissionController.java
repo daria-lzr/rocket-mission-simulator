@@ -31,8 +31,14 @@ public class MissionController {
     private ScheduledFuture<?> simulationTask;
 
     private static final double OVERHEATING_ALTITUDE = 400.0;
+    private static final double MAX_Q_EVENT_ALTITUDE = 8_000.0;
+    private static final double PROPELLANT_INSTABILITY_ALTITUDE = 50_000.0;
+    private static final double ATTITUDE_CONTROL_ALTITUDE = 220_000.0;
     private MissionEvent activeEvent;
     private boolean overheatingTriggered = false;
+    private boolean aerodynamicStressTriggered = false;
+    private boolean propellantInstabilityTriggered = false;
+    private boolean attitudeControlTriggered = false;
     private boolean propellantExhaustionLogged = false;
     private boolean engineCutoffLogged = false;
     private volatile boolean eventPending = false;
@@ -72,8 +78,8 @@ public class MissionController {
                         "ENGINE CUTOFF: Coasting toward the target apogee."));
             }
 
-            // Do not fail merely because the engines have shut down.
-            // Check whether the highest reached altitude was sufficient.
+            // do not fail merely because the engines have shut down
+            // check whether the highest reached altitude was sufficient
             boolean missedTarget = (mission.getRocket().hasCrashed()
                     || (mission.getRocket().isCoasting() && velocity <= 0.0))
                     && altitude < Mission.TARGET_ALTITUDE;
@@ -174,7 +180,7 @@ public class MissionController {
     }
 
     private void failMission(String reason) {
-        //check is mission alr ended
+        //check if mission already ended
         if (mission.getCurrentState() != Mission.MissionState.SUCCESS && mission.getCurrentState() != Mission.MissionState.FAILURE) {
             mission.failMission();
             missionLogPane.setAscending(false);
@@ -186,89 +192,209 @@ public class MissionController {
         }
     }
 
+    // trigger each event once during ascent. Never overlap emergency prompts.
     private void checkMissionEvents(double altitude) {
-        if (!overheatingTriggered
-                && altitude >= OVERHEATING_ALTITUDE
-                && mission.getCurrentState() == Mission.MissionState.ASCENT) {
-
-            overheatingTriggered = true;
-            eventPending = true;
-
-            Platform.runLater(() -> {
-                if (mission.getCurrentState() == Mission.MissionState.ASCENT) {
-                    activeEvent = MissionEvent.ENGINE_OVERHEATING;
-                    eventDeadlineNanos = System.nanoTime() + EVENT_RESPONSE_TIMEOUT_NANOS;
-                    missionPane.displayMissionEvent(activeEvent);
-                    missionLogPane.showEventPrompt(
-                            activeEvent, eventDeadlineNanos, EVENT_RESPONSE_TIMEOUT_NANOS);
-                }
-            });
-        }
-    }
-
-    private void checkEventTimeout() {
-        if (activeEvent == null) {
+        if (eventPending || mission.getCurrentState() != Mission.MissionState.ASCENT) {
             return;
         }
 
-        if (System.nanoTime() - eventDeadlineNanos >= 0) {
-            System.out.println("Event response timed out!");
-            missionLogPane.addEntry("WARNING: Response timed out. Engine failure imminent.");
-
-            handleEventResponse(2);
+        MissionEvent nextEvent;
+        if (!overheatingTriggered && altitude >= OVERHEATING_ALTITUDE) {
+            overheatingTriggered = true;
+            nextEvent = MissionEvent.ENGINE_OVERHEATING;
+        } else if (!aerodynamicStressTriggered && altitude >= MAX_Q_EVENT_ALTITUDE) {
+            aerodynamicStressTriggered = true;
+            nextEvent = MissionEvent.AERODYNAMIC_STRESS;
+        } else if (!propellantInstabilityTriggered
+                && altitude >= PROPELLANT_INSTABILITY_ALTITUDE) {
+            propellantInstabilityTriggered = true;
+            nextEvent = MissionEvent.PROPELLANT_INSTABILITY;
+        } else if (!attitudeControlTriggered
+                && altitude >= ATTITUDE_CONTROL_ALTITUDE) {
+            attitudeControlTriggered = true;
+            nextEvent = MissionEvent.ATTITUDE_CONTROL_FAILURE;
+        } else {
+            return;
         }
+
+        // set this on  simulation thread to prevent duplicate event scheduling
+        eventPending = true;
+        Platform.runLater(() -> {
+            if (mission.getCurrentState() != Mission.MissionState.ASCENT) {
+                eventPending = false;
+                return;
+            }
+            activeEvent = nextEvent;
+            eventDeadlineNanos = System.nanoTime() + EVENT_RESPONSE_TIMEOUT_NANOS;
+            missionPane.displayMissionEvent(activeEvent);
+
+            if (nextEvent == MissionEvent.AERODYNAMIC_STRESS) {
+                missionLogPane.addEntry(String.format(java.util.Locale.US,
+                        "DIAGNOSTIC: Dynamic pressure %.1f kPa (recommended limit: 25 kPa).",
+                        mission.getRocket().getDynamicPressure() / 1_000.0));
+            }
+            missionLogPane.showEventPrompt(
+                    activeEvent, eventDeadlineNanos, EVENT_RESPONSE_TIMEOUT_NANOS);
+        });
     }
 
+    private void checkEventTimeout() {
+        if (activeEvent != null && System.nanoTime() - eventDeadlineNanos >= 0) {
+            handleEventResponse(-1);
+        }
+    }
 
     public void handleEventResponse(int selectedIndex) {
         if (activeEvent == null) {
             return;
         }
 
-        if (System.nanoTime() - eventDeadlineNanos >= 0) {
-            selectedIndex = 2;
-        }
-
-        missionLogPane.hideEventPrompt();
-
-        System.out.println("Event: " + activeEvent);
-        System.out.println("Selected response index: " + selectedIndex);
-
-        if (selectedIndex == 0) {
-            missionLogPane.addEntry("RECOVERY: Throttle reduced to cool the engine.");
-            reduceEngineThrottle();
-            simulationPane.showRecoveryNotification(false);
-        } else if (selectedIndex == 1) {
-            missionLogPane.addEntry("RECOVERY: Emergency cooling activated. Ascent continuing.");
-            simulationPane.showRecoveryNotification(true);
-        } else if (selectedIndex == 2) {
-            if (System.nanoTime() - eventDeadlineNanos < 0) {
-                missionLogPane.addEntry("WARNING: Overheating warning ignored. Engine failure imminent.");
-            }
-            scheduleEngineFailure();
-        }
-
+        // even a click that arrives just after the deadline counts as a timeout
+        boolean timedOut = System.nanoTime() - eventDeadlineNanos >= 0;
+        MissionEvent resolvedEvent = activeEvent;
         activeEvent = null;
+        missionLogPane.hideEventPrompt();
         missionPane.clearMissionEvent();
 
-        if (selectedIndex != 2) {
-            eventPending = false;
+        if (resolvedEvent == MissionEvent.ENGINE_OVERHEATING) {
+            handleOverheatingResponse(timedOut ? -1 : selectedIndex);
+        } else if (resolvedEvent == MissionEvent.AERODYNAMIC_STRESS) {
+            handleAerodynamicStressResponse(timedOut ? -1 : selectedIndex);
+        } else if (resolvedEvent == MissionEvent.PROPELLANT_INSTABILITY) {
+            handlePropellantInstabilityResponse(timedOut ? -1 : selectedIndex);
+        } else if (resolvedEvent == MissionEvent.ATTITUDE_CONTROL_FAILURE) {
+            handleAttitudeControlResponse(timedOut ? -1 : selectedIndex);
         }
     }
 
+    private void handleOverheatingResponse(int selectedIndex) {
+        switch (selectedIndex) {
+            case 0 -> {
+                missionLogPane.addEntry("RECOVERY: Throttle reduced to cool the engine.");
+                reduceEngineThrottle();
+                simulationPane.showRecoveryNotification(false);
+                eventPending = false;
+            }
+            case 1 -> {
+                missionLogPane.addEntry("RECOVERY: Emergency cooling activated. Ascent continuing.");
+                simulationPane.showRecoveryNotification(true);
+                eventPending = false;
+            }
+            default -> {
+                String explanation = selectedIndex == -1
+                        ? "TIMEOUT: Engine overheating response window expired."
+                        : "INCORRECT RESPONSE: Ignoring an overheating engine risks severe damage.";
+                missionLogPane.addImmediateEntry(explanation);
+                scheduleEngineFailure();
+            }
+        }
+    }
 
-    private void scheduleEngineFailure() {
-        PauseTransition failureDelay = new PauseTransition(Duration.seconds(3));
+    private void handleAerodynamicStressResponse(int selectedIndex) {
+        if (selectedIndex == 1) {
+            // A real throttle reduction, not just a cosmetic choice.
+            missionLogPane.addEntry("RECOVERY: Throttle reduced to limit aerodynamic stress.");
+            reduceEngineThrottle();
+            simulationPane.showMaxQRecoveryNotification();
+            eventPending = false;
+            return;
+        }
 
-        failureDelay.setOnFinished(event -> {
+        String explanation = switch (selectedIndex) {
+            case 0 -> "INCORRECT RESPONSE: Increasing thrust worsens aerodynamic loading.";
+            case 2 -> "INCORRECT RESPONSE: Attitude thrusters cannot relieve aerodynamic pressure.";
+            default -> "TIMEOUT: No corrective response to dangerous aerodynamic loading.";
+        };
+        missionLogPane.addImmediateEntry(explanation);
+        scheduleAerodynamicFailure();
+    }
+
+    /** Only activating the dedicated damping controller stabilizes the tank oscillations. */
+    private void handlePropellantInstabilityResponse(int selectedIndex) {
+        if (selectedIndex == 2) {
+            missionLogPane.addEntry(
+                    "RECOVERY: Propellant slosh-damping controller activated. Vehicle stable.");
+            simulationPane.showPropellantRecoveryNotification();
+            eventPending = false;
+            return;
+        }
+
+        String explanation = switch (selectedIndex) {
+            case 0 -> "INCORRECT RESPONSE: Tank pressure was nominal; extra "
+                    + "pressurization does not stop the propellant oscillations.";
+            case 1 -> "INCORRECT RESPONSE: Aggressive attitude corrections "
+                    + "can amplify propellant sloshing and destabilize the vehicle.";
+            default -> "TIMEOUT: Propellant oscillations were not corrected in time.";
+        };
+        missionLogPane.addImmediateEntry(explanation);
+        schedulePropellantInstabilityFailure();
+    }
+
+    // the backup RCS is the only viable option: guidance is online and
+    // the main engine is already shut down during the high-altitude coast
+    private void handleAttitudeControlResponse(int selectedIndex) {
+        if (selectedIndex == 2) {
+            missionLogPane.addEntry(
+                    "RECOVERY: Primary RCS isolated; backup thrusters restored stable attitude.");
+            simulationPane.showAttitudeRecoveryNotification();
+            eventPending = false;
+            return;
+        }
+
+        String explanation = switch (selectedIndex) {
+            case 0 -> "INCORRECT RESPONSE: Guidance is functioning. A computer restart "
+                    + "cannot restore pressure in the primary RCS.";
+            case 1 -> "INCORRECT RESPONSE: Main-engine ignition cannot safely replace "
+                    + "the failed reaction-control thrusters during coast.";
+            default -> "TIMEOUT: Uncorrected attitude drift prevents safe satellite deployment.";
+        };
+        missionLogPane.addImmediateEntry(explanation);
+        scheduleAttitudeControlFailure();
+    }
+
+    private void scheduleAttitudeControlFailure() {
+        // show  diagnosis before transitioning to mission failure
+        PauseTransition delay = new PauseTransition(Duration.seconds(1.5));
+        delay.setOnFinished(event -> {
             if (mission.getCurrentState() == Mission.MissionState.ASCENT) {
-                System.out.println("Critical engine failure!");
-                failMission();
+                failMission("Attitude control lost; satellite deployment is unsafe.");
             }
         });
-
-        failureDelay.play();
+        delay.play();
     }
+
+    private void schedulePropellantInstabilityFailure() {
+        // give user time to read why the response was unsafe
+        PauseTransition delay = new PauseTransition(Duration.seconds(1.5));
+        delay.setOnFinished(event -> {
+            if (mission.getCurrentState() == Mission.MissionState.ASCENT) {
+                failMission("Loss of vehicle stability due to propellant sloshing.");
+            }
+        });
+        delay.play();
+    }
+
+    private void scheduleEngineFailure() {
+        PauseTransition delay = new PauseTransition(Duration.seconds(3));
+        delay.setOnFinished(event -> {
+            if (mission.getCurrentState() == Mission.MissionState.ASCENT) {
+                failMission("Critical engine failure following overheating.");
+            }
+        });
+        delay.play();
+    }
+
+    private void scheduleAerodynamicFailure() {
+        // keep the explanation readable briefly before the failure animation
+        PauseTransition delay = new PauseTransition(Duration.seconds(1.5));
+        delay.setOnFinished(event -> {
+            if (mission.getCurrentState() == Mission.MissionState.ASCENT) {
+                failMission("Vehicle structural failure due to excessive aerodynamic stress.");
+            }
+        });
+        delay.play();
+    }
+
 
     private void reduceEngineThrottle() {
         mission.getRocket().reduceAcceleration();

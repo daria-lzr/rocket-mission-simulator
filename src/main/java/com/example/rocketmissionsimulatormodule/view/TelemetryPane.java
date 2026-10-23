@@ -113,7 +113,7 @@ public class TelemetryPane extends VBox {
             fill.prefWidthProperty().unbind();
             //this is a bound width (so it also adjusts when the sidebar resizes)
             fill.prefWidthProperty().bind(track.widthProperty().subtract(8)
-                    .multiply(Math.max(0.0, Math.min(1.0, fraction))));
+                    .multiply(Math.clamp(fraction, 0.0, 1.0)));
         }
     }
 }

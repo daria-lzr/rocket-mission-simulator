@@ -20,7 +20,7 @@ public class FlightView extends Pane {
     private static final double FADE_START_ALTITUDE = 30_000.0;
     private static final double FADE_END_ALTITUDE = 220_000.0;
 
-    // the ground scrolls down and leaves the camera view during initial ascent.
+    // the ground scrolls down and leaves the camera view during initial ascent
     private static final double GROUND_EXIT_ALTITUDE = 1_500.0;
     private static final double GROUND_HEIGHT = 70.0;
 
@@ -139,7 +139,7 @@ public class FlightView extends Pane {
 
     public void updateRocketPosition(double altitude) {
         // keep the ground anchored at the bottom. A capped, slow upward
-        // rocket animation suggests ascent without sending it off-screen.
+        // rocket animation suggests ascent without sending it off-screen
         double rocketHeight = starshipView.getBoundsInLocal().getHeight();
         double startingCenterY = getHeight() - 70 - rocketHeight / 2.0;
         double desiredCenterY = getHeight() * 0.45;
@@ -147,10 +147,8 @@ public class FlightView extends Pane {
         double initialRise = Math.min(maximumShipMovement * 0.65, altitude * 0.1);
         double continuingRise = maximumShipMovement * 0.35
                 * (1.0 - Math.exp(-Math.max(0.0, altitude - 2_000.0) / 65_000.0));
-        starshipView.setTranslateY(-Math.min(maximumShipMovement,
-                initialRise + continuingRise));
-        // as the rocket climbs, the ground moves DOWN and out of the camera frame.
-        // no opacity change: it is gradually clipped by the bottom of the view.
+        starshipView.setTranslateY(-Math.min(maximumShipMovement, initialRise + continuingRise));
+        // as the rocket climbs, the ground moves DOWN and out of the camera frame
         double groundDistance = Math.clamp(altitude / GROUND_EXIT_ALTITUDE, 0.0, 1.0);
         groundView.setOpacity(1.0);
         double groundY = GROUND_HEIGHT * groundDistance;
@@ -158,10 +156,10 @@ public class FlightView extends Pane {
         groundView.setVisible(groundDistance < 1.0);
 
         // cinematic sky-to-space transition spread across a large portion
-        // of the ascent. Smoothstep avoids an abrupt start and finish.
+        // of the ascent. Smoothstep avoids an abrupt start and finish
         double progress = (altitude - FADE_START_ALTITUDE)
                 / (FADE_END_ALTITUDE - FADE_START_ALTITUDE);
-        progress = Math.max(0.0, Math.min(1.0, progress));
+        progress = Math.clamp(progress, 0.0, 1.0);
         spaceView.setOpacity(progress * progress * (3.0 - 2.0 * progress));
     }
 
@@ -170,7 +168,7 @@ public class FlightView extends Pane {
         double rocketCenterX = starshipView.getBoundsInParent().getCenterX();
         double rocketCenterY = starshipView.getBoundsInParent().getCenterY();
 
-        //position  satellite at rocket's center
+        //position satellite at rocket's center
         satelliteView.setLayoutX(
                 rocketCenterX - satelliteView.getBoundsInLocal().getWidth() / 2
         );

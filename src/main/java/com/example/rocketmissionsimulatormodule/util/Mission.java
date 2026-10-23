@@ -48,9 +48,9 @@ public class Mission {
             return false;
         }
 
-        // The mission pauses at apogee, not at the first crossing of 300 km.
-        // Vertical velocity should be approximately zero at this point.
-        // This is still a deployment-altitude milestone, not a real orbit.
+        // the mission pauses at apogee, not at the first crossing of 300 km
+        // vertical velocity should be approximately zero at this point
+        // this is still a deployment-altitude milestone, not a real orbit
         if (rocket.hasLeftGround() && rocket.getAltitude() >= TARGET_ALTITUDE
                 && rocket.getVelocity() <= 0.0) {
             currentState = MissionState.ORBIT;

@@ -97,10 +97,9 @@ public class MissionController {
                 stopSimulation();
             }
 
-            /** use this cause JavaFX is not designed to allow multiple threads to modify its GUI simultaneously
+            /* use this cause JavaFX is not designed to allow multiple threads to modify its GUI simultaneously
              * it submits the update to the JavaFX Application Thread
              * because JavaFX modifies the GUI solely though its designated thread
-             *
              */
             final boolean reachedOrbit = orbitReached;
             final boolean failedAscent = missedTarget && !orbitReached;
@@ -135,8 +134,8 @@ public class MissionController {
 
         ignitionStarted = true;
         missionLogPane.addEntry("IGNITION: Raptor-inspired engine startup initiated.");
-        // only start the physics clock once the three-second visual ignition finishes
-        // the callback executes on the JavaFX application thread
+        //only start the physics clock once the three-second visual ignition finishes
+        //the callback executes on the JavaFX application thread
         simulationPane.playIgnition(() -> {
             if (mission.getCurrentState() != Mission.MissionState.ASCENT) {
                 simulationPane.stopEngines();

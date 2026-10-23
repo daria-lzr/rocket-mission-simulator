@@ -90,8 +90,7 @@ public class EnginePlume extends Canvas {
             if (ignitionStartNanos == 0L) {
                 ignitionStartNanos = now;
             }
-            double progress = Math.min(1.0,
-                    (now - ignitionStartNanos) / (double) IGNITION_DURATION_NANOS);
+            double progress = Math.min(1.0, (now - ignitionStartNanos) / (double) IGNITION_DURATION_NANOS);
             visibleThrottle = smoothstep(Math.clamp((progress - 0.10) / 0.76, 0.0, 1.0));
             if (progress >= 1.0) {
                 igniting = false;
@@ -102,8 +101,7 @@ public class EnginePlume extends Canvas {
                 }
             }
         } else {
-            visibleThrottle += (requestedThrottle - visibleThrottle)
-                    * Math.min(1.0, elapsedSeconds * 10.5);
+            visibleThrottle += (requestedThrottle - visibleThrottle) * Math.min(1.0, elapsedSeconds * 10.5);
         }
 
         graphics.clearRect(0, 0, WIDTH, HEIGHT);
@@ -120,7 +118,6 @@ public class EnginePlume extends Canvas {
 
     private void drawExhaust(double time) {
         double power = Math.clamp(visibleThrottle, 0.0, 1.0);
-
         double ascentStretch = 0.34 + 0.66 * Math.clamp((altitude - 22.0) / 110.0, 0.0, 1.0);
         double altitudeExpansion = 1.0 + 0.22 * Math.clamp(altitude / 120_000.0, 0.0, 1.0);
 
@@ -148,8 +145,7 @@ public class EnginePlume extends Canvas {
                     glowRadiusX, false, CycleMethod.NO_CYCLE,
                     new Stop(0.0, Color.rgb(255, 215, 160, 0.10 * power * padFactor)),
                     new Stop(1.0, Color.TRANSPARENT)));
-            graphics.fillOval(CENTER_X - glowRadiusX, 42.0 - glowRadiusY,
-                    glowRadiusX * 2.0, glowRadiusY * 2.0);
+            graphics.fillOval(CENTER_X - glowRadiusX, 42.0 - glowRadiusY, glowRadiusX * 2.0, glowRadiusY * 2.0);
         }
     }
 

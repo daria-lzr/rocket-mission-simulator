@@ -1,9 +1,5 @@
 package com.example.rocketmissionsimulatormodule.util;
 
-/**
- * Simplified vertical flight model. Uses SI units and a guided suborbital ascent.
- * This is not an orbital mechanics model or a calibrated Starship simulation.
- */
 public class Rocket {
     private static final double EARTH_RADIUS_M = 6_371_000.0;
     private static final double G0 = 9.80665;
@@ -65,7 +61,7 @@ public class Rocket {
         double fullThrust = FULL_THROTTLE_MASS_FLOW_KG_S * isp * G0;
         double drag = 0.5 * density * DRAG_COEFFICIENT * CROSS_SECTION_M2 * velocity * Math.abs(velocity);
 
-        // throttle back around max-Q, and avoid excessive net acceleration
+        //throttle back around max-Q, and avoid excessive net acceleration
         double pressureThrottle = dynamicPressure > MAX_DYNAMIC_PRESSURE_PA
                 ? Math.max(0.62, Math.sqrt(MAX_DYNAMIC_PRESSURE_PA / dynamicPressure))
                 : 1.0;
@@ -74,8 +70,7 @@ public class Rocket {
         double automaticThrottle = Math.min(1.0,
                 Math.clamp(accelerationThrottle, 0.0, pressureThrottle));
 
-        // once above the dense atmosphere, predict the unpowered apogee from
-        // radial mechanical energy. Cut off early enough to coast to target
+        // once above the dense atmosphere, predict the unpowered apogee from radial mechanical energy. Cut off early enough to coast to target
         if (!engineCutoff && altitude >= GUIDANCE_START_ALTITUDE_M && velocity > 0.0
                 && estimateUnpoweredApogee() >= targetApogeeMeters) {
             engineCutoff = true;
@@ -108,14 +103,12 @@ public class Rocket {
 
     private double estimateUnpoweredApogee() {
         double radius = EARTH_RADIUS_M + altitude;
-        double reciprocalApogee = 1.0 / radius
-                - velocity * velocity / (2.0 * GRAVITATIONAL_PARAMETER);
-        return reciprocalApogee <= 0.0 ? Double.POSITIVE_INFINITY
-                : 1.0 / reciprocalApogee - EARTH_RADIUS_M;
+        double reciprocalApogee = 1.0 / radius - velocity * velocity / (2.0 * GRAVITATIONAL_PARAMETER);
+        return reciprocalApogee <= 0.0 ? Double.POSITIVE_INFINITY : 1.0 / reciprocalApogee - EARTH_RADIUS_M;
     }
 
     public synchronized double getAltitude() { return altitude; }
-    // signed vertical velocity: positive for upward flight (m/s)
+    //signed vertical velocity: positive for upward flight (m/s)
     public synchronized double getVelocity() { return velocity; }
     public synchronized double getAcceleration() { return acceleration; }
     public synchronized double getFuelFraction() {
@@ -139,15 +132,8 @@ public class Rocket {
         return 0.5 * density * velocity * velocity;
     }
 
-    // optional player cap on automatic throttle (0 = engines off, 1 = no cap)
-    public synchronized void setThrottle(double value) {
-        if (!Double.isFinite(value)) {
-            throw new IllegalArgumentException("Throttle must be finite");
-        }
-        throttleLimit = Math.clamp(value, 0.0, 1.0);
-    }
 
-    // existing overheating response now limits thrust for its entire duration
+    // existing overheating response limits thrust for its entire duration
     public synchronized void reduceAcceleration() {
         recoveryThrottleFactor = 0.5;
     }

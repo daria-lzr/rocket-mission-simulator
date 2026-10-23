@@ -280,8 +280,8 @@ public class MissionLogPane extends ScrollPane {
     }
 
 
-     //Stops all running animations and timers and clears any pending messages
-     // used when restarting the mission so that the old mission log doesn't keep running in the background
+     //stops all running animations and timers and clears any pending messages
+     //used when restarting the mission so that the old mission log doesn't keep running in the background
     public void dispose() {
         setAscending(false);
         hideEventPrompt();

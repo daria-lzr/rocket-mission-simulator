@@ -86,11 +86,11 @@ The simulator window will open when the application is ready.
 - Subsequent launches should be faster because downloaded dependencies are cached locally.
 - On macOS/Linux, if you encounter a `Permission denied` error, execute:
 
-```bash
-chmod +x mvnw
-```
+  ```bash
+  chmod +x mvnw
+  ```
 
-Then repeat the launch command.
+  Then repeat the launch command.
 
 ### Step 5 — Build without launching (optional)
 
@@ -117,6 +117,19 @@ mvnw.cmd clean package
 5. Once the rocket reaches **ALTITUDE REACHED**, click **Deploy Satellite** to complete the mission.
 6. After the mission succeeds or fails, select **Restart Mission** to begin another attempt or **Exit Application** to close the simulator.
 
+### Correct emergency responses (for testing)
+
+The emergencies occur during ascent in the following order. To complete a successful mission, click the indicated response in the Mission Log before the 20-second timer expires.
+
+| Event | Approximate altitude | Correct response to select |
+| --- | --- | --- |
+| **Engine Overheating** | 400 m | **[1] REDUCE ENGINE THROTTLE** **or** **[2] ACTIVATE EMERGENCY COOLING** — both are accepted. |
+| **Aerodynamic Stress (Max-Q)** | 8 km | **[2] REDUCE THROTTLE TO LOWER PRESSURE** |
+| **Propellant Instability** | 50 km | **[3] ACTIVATE PROPELLANT SLOSH DAMPING** |
+| **Attitude Control Failure** | 220 km | **[3] ISOLATE PRIMARY RCS / ENABLE BACKUP** |
+
+Other responses, or letting the timer expire, cause mission failure. You can test the failure screen by deliberately choosing an incorrect answer, then selecting **Restart Mission** to try again.
+
 The rocket is guided automatically. The flight model is simplified and does not simulate a physically stable orbit.
 
 ## 4. Final submission files
@@ -124,7 +137,7 @@ The rocket is guided automatically. The flight model is simplified and does not 
 All required submission files are included in the extracted `rocket-mission-simulator-main` project folder.
 
 | Required item | Location |
-|---|---|
+| --- | --- |
 | Runnable Java project and complete source code | Entire project directory. Java source files are located in `src/main/java/`, and application resources are located in `src/main/resources/`. |
 | Build and usage instructions | `README.md` in the project root directory |
 | Final Product Backlog | [docs/Rocket_Mission_Simulator_Final_Product_Backlog.pdf](docs/Rocket_Mission_Simulator_Final_Product_Backlog.pdf) |

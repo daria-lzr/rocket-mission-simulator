@@ -133,7 +133,7 @@ public class MissionController {
         }
 
         ignitionStarted = true;
-        missionLogPane.addEntry("IGNITION: Raptor-inspired engine startup initiated.");
+        missionLogPane.addEntry("IGNITION: Raptor engine startup initiated.");
         //only start the physics clock once the three-second visual ignition finishes
         //the callback executes on the JavaFX application thread
         simulationPane.playIgnition(() -> {

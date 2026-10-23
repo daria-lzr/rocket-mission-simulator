@@ -161,13 +161,6 @@ Other classes can access these values through methods such as `getAltitude()` an
 
 Similarly, the `Mission` class manages mission progression through methods such as `launch()` and `deploySatellite()`.
 
-### Abstraction
-
-Abstraction hides implementation details behind simpler interfaces, allowing other components to use functionality without needing to understand its internal implementation.
-
-For example, the abstract class `MissionOutcomeOverlay` handles common functionality for displaying mission results, including layout, buttons, and fade-in animations.
-
-Other components can use `showOutcome()` without needing to manage these details themselves.
 
 ### Inheritance
 

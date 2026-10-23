@@ -45,6 +45,22 @@ public class SimulationPane extends Pane {
         successOverlay.prefHeightProperty().bind(heightProperty());
     }
 
+    public void playIgnition(Runnable onFinished) {
+        flightView.playIgnition(onFinished);
+    }
+
+    public void updateEngineExhaust(double throttle, double altitude) {
+        flightView.updateEngineExhaust(throttle, altitude);
+    }
+
+    public void stopEngines() {
+        flightView.stopEngines();
+    }
+
+    public void dispose() {
+        flightView.dispose();
+    }
+
     public void updateRocketPosition(double altitude) {
         flightView.updateRocketPosition(altitude);
     }

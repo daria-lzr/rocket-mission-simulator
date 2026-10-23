@@ -16,6 +16,7 @@ public class FlightView extends Pane {
     private ImageView satelliteView;
     private ImageView spaceView;
     private ImageView groundView;
+    private final EnginePlume enginePlume;
 
     private static final double FADE_START_ALTITUDE = 30_000.0;
     private static final double FADE_END_ALTITUDE = 220_000.0;
@@ -25,7 +26,7 @@ public class FlightView extends Pane {
     private static final double GROUND_HEIGHT = 70.0;
 
     public FlightView() {
-        // keep scenery from drawing outside the simulation viewport as it scrolls.
+        // keep scenery from drawing outside the simulation viewport as it scrolls
         Rectangle viewportClip = new Rectangle();
         viewportClip.widthProperty().bind(widthProperty());
         viewportClip.heightProperty().bind(heightProperty());
@@ -34,12 +35,15 @@ public class FlightView extends Pane {
         setupBackground();
         setupSpace();
         setupStarship();
+        enginePlume = new EnginePlume();
+        setupEnginePlume();
         groundView = setupGround();
         setupSatellite();
 
         getChildren().addAll(
                 spaceView,
                 groundView,
+                enginePlume,
                 starshipView,
                 satelliteView
         );
@@ -99,6 +103,38 @@ public class FlightView extends Pane {
                         .subtract(70)
                         .subtract(starshipView.getBoundsInLocal().getHeight())
         );
+    }
+
+    private void setupEnginePlume() {
+        // The exhaust stays centered on the engine bells and follows the
+        // ImageView's ascent translation automatically.
+        enginePlume.layoutXProperty().bind(
+                starshipView.layoutXProperty()
+                        .add(starshipView.getBoundsInLocal().getWidth() / 2.0)
+                        .subtract(EnginePlume.WIDTH / 2.0)
+        );
+        enginePlume.layoutYProperty().bind(
+                starshipView.layoutYProperty()
+                        .add(starshipView.getBoundsInLocal().getHeight())
+                        .subtract(5.0)
+        );
+        enginePlume.translateYProperty().bind(starshipView.translateYProperty());
+    }
+
+    public void playIgnition(Runnable onFinished) {
+        enginePlume.ignite(onFinished);
+    }
+
+    public void updateEngineExhaust(double throttle, double altitude) {
+        enginePlume.setThrottle(throttle, altitude);
+    }
+
+    public void stopEngines() {
+        enginePlume.stopEngines();
+    }
+
+    public void dispose() {
+        enginePlume.dispose();
     }
 
     private ImageView setupGround() {

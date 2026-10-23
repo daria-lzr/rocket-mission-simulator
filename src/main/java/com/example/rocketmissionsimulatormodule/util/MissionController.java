@@ -29,6 +29,7 @@ public class MissionController {
             Executors.newSingleThreadScheduledExecutor();
 
     private ScheduledFuture<?> simulationTask;
+    private boolean ignitionStarted;
 
     private static final double OVERHEATING_ALTITUDE = 400.0;
     private static final double MAX_Q_EVENT_ALTITUDE = 8_000.0;
@@ -115,6 +116,7 @@ public class MissionController {
                 }
                 telemetryPane.updateTelemetry(altitude, velocity, fuelFraction, throttle);
                 simulationPane.updateRocketPosition(altitude);
+                simulationPane.updateEngineExhaust(throttle, altitude);
                 missionPane.updateMissionStatus();
 
                 checkEventTimeout();
@@ -126,21 +128,27 @@ public class MissionController {
 
 
     public void startSimulation() {
-        if (mission.getCurrentState() == Mission.MissionState.ASCENT
-                && (simulationTask == null || simulationTask.isDone())) {
+        if (mission.getCurrentState() != Mission.MissionState.ASCENT
+                || ignitionStarted || (simulationTask != null && !simulationTask.isDone())) {
+            return;
+        }
 
+        ignitionStarted = true;
+        missionLogPane.addEntry("IGNITION: Raptor-inspired engine startup initiated.");
+        // Only start the physics clock once the three-second visual ignition
+        // finishes. The callback executes on the JavaFX application thread.
+        simulationPane.playIgnition(() -> {
+            if (mission.getCurrentState() != Mission.MissionState.ASCENT) {
+                simulationPane.stopEngines();
+                return;
+            }
             missionLogPane.setAscending(true);
             missionLogPane.addEntry("LIFTOFF: Rocket launch successful.");
             missionLogPane.addEntry("STATUS: Automatic ascent guidance active. Target: 300 km.");
             missionLogPane.addEntry("INSTRUCTION: Monitor telemetry for flight updates.");
-
             simulationTask = executor.scheduleAtFixedRate(
-                    () -> updateSimulation(),
-                    0,
-                    50,
-                    TimeUnit.MILLISECONDS
-            );
-        }
+                    this::updateSimulation, 0, 50, TimeUnit.MILLISECONDS);
+        });
     }
 
 
@@ -152,6 +160,7 @@ public class MissionController {
 
     public void shutdown() {
         stopSimulation();
+        simulationPane.dispose();
         executor.shutdown();
     }
 
@@ -187,6 +196,7 @@ public class MissionController {
             missionLogPane.hideEventPrompt();
             missionLogPane.addEntry("FAILURE: " + reason);
             stopSimulation();
+            simulationPane.stopEngines();
             missionPane.updateMissionStatus();
             simulationPane.showFailureAnimation();
         }

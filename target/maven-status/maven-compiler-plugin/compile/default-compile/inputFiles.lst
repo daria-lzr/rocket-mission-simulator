@@ -8,6 +8,7 @@
 /Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/com/example/rocketmissionsimulatormodule/view/MissionPane.java
 /Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/com/example/rocketmissionsimulatormodule/view/SimulationPane.java
 /Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/com/example/rocketmissionsimulatormodule/view/TelemetryPane.java
+/Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/com/example/rocketmissionsimulatormodule/view/components/EnginePlume.java
 /Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/com/example/rocketmissionsimulatormodule/view/components/FailureOverlay.java
 /Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/com/example/rocketmissionsimulatormodule/view/components/FlightView.java
 /Users/lazar/IdeaProjects/rocket-mission-simulator/src/main/java/com/example/rocketmissionsimulatormodule/view/components/RecoveryNotification.java

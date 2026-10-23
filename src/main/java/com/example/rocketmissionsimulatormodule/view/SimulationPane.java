@@ -2,6 +2,7 @@ package com.example.rocketmissionsimulatormodule.view;
 
 import com.example.rocketmissionsimulatormodule.view.components.FailureOverlay;
 import com.example.rocketmissionsimulatormodule.view.components.FlightView;
+import com.example.rocketmissionsimulatormodule.view.components.MissionOutcomeOverlay;
 import com.example.rocketmissionsimulatormodule.view.components.RecoveryNotification;
 import com.example.rocketmissionsimulatormodule.view.components.SuccessOverlay;
 
@@ -11,8 +12,8 @@ public class SimulationPane extends Pane {
 
     private final FlightView flightView;
     private final RecoveryNotification recoveryNotification;
-    private final FailureOverlay failureOverlay;
-    private final SuccessOverlay successOverlay;
+    private final MissionOutcomeOverlay failureOverlay;
+    private final MissionOutcomeOverlay successOverlay;
 
     public SimulationPane() {
         setPrefSize(800, 500);
@@ -97,10 +98,10 @@ public class SimulationPane extends Pane {
     }
 
     public void showFailureAnimation() {
-        failureOverlay.showFailure();
+        failureOverlay.showOutcome();
     }
 
     public void showSuccessAnimation() {
-        successOverlay.showSuccess();
+        successOverlay.showOutcome();
     }
 }

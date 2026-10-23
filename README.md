@@ -2,7 +2,7 @@
 
 Rocket Mission Simulator is a desktop application in which you launch a rocket, follow its flight, respond to emergencies, and deploy a satellite.
 
-The application is developed in **Java 21** and uses **JavaFX** instead of Java Swing, as explicitly approved by our project tutor.
+The application is developed in **Java 21** and uses **JavaFX**.
 
 ## 1. What you need
 

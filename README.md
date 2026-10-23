@@ -84,3 +84,9 @@ The application uses **Object-Oriented Programming (OOP)** to organize the code 
 - **Polymorphism:** Different subclasses can respond differently to the same method call. Both `SuccessOverlay` and `FailureOverlay` override `applyOutcomeAppearance()` to set their own colors and styling. When `showOutcome()` calls that method, Java uses the appropriate version for the actual overlay being displayed.
 
 The two independently researched topics are **enums** (for mission states and events) and **multithreading** (for running simulation calculations separately from JavaFX interface updates). For more details, read [`Independent_Research_Reflection.pdf`](docs/Independent_Research_Reflection.pdf).
+
+## 6. AI use
+
+We used AI to research the mathematical models and calculations behind the simulator’s simplified rocket flight physics and engine plume effects. We then implemented these calculations in our code, allowing us to focus more on the application's functionality than on deriving the physics ourselves.
+
+We also used AI to explore programming topics and learn how to implement them, as well as to generate graphical assets for the application.

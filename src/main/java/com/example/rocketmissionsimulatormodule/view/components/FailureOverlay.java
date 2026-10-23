@@ -4,12 +4,17 @@ import javafx.animation.FadeTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
+import javafx.scene.control.Button;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
 public class FailureOverlay extends StackPane {
+
+    private final Button restartButton = new Button("Restart Mission");
+    private final Button exitButton = new Button("Exit Application");
 
     public FailureOverlay() {
         setupOverlay();
@@ -23,16 +28,24 @@ public class FailureOverlay extends StackPane {
                         + "-fx-font-weight: bold;"
         );
 
-        Label failureDescription = new Label("CRITICAL ENGINE MALFUNCTION");
+        Label failureDescription = new Label("MISSION TERMINATED");
 
         failureDescription.setStyle(
                 "-fx-text-fill: #FECACA;"
                         + "-fx-font-size: 14px;"
         );
 
-        VBox failureMessage = new VBox(
-                10, failureTitle, failureDescription
-        );
+        restartButton.setStyle(buttonStyle("#1C745B"));
+        exitButton.setStyle(buttonStyle("#26343F"));
+        restartButton.setPrefWidth(145);
+        exitButton.setPrefWidth(145);
+        restartButton.setPrefHeight(38);
+        exitButton.setPrefHeight(38);
+
+        HBox actions = new HBox(12, restartButton, exitButton);
+        actions.setAlignment(Pos.CENTER);
+
+        VBox failureMessage = new VBox(14, failureTitle, failureDescription, actions);
 
         failureMessage.setAlignment(Pos.CENTER);
         failureMessage.setPadding(new Insets(25));
@@ -58,6 +71,21 @@ public class FailureOverlay extends StackPane {
 
         setVisible(false);
         setOpacity(0);
+    }
+
+    private static String buttonStyle(String background) {
+        return "-fx-background-color: " + background + ";"
+                + "-fx-text-fill: white; -fx-font-size: 12px;"
+                + "-fx-font-weight: bold; -fx-background-radius: 6;"
+                + "-fx-cursor: hand;";
+    }
+
+    public void setOnRestart(Runnable action) {
+        restartButton.setOnAction(event -> action.run());
+    }
+
+    public void setOnExit(Runnable action) {
+        exitButton.setOnAction(event -> action.run());
     }
 
     public void showFailure() {

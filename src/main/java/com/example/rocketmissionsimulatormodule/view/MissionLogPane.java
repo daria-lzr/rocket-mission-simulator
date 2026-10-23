@@ -51,6 +51,8 @@ public class MissionLogPane extends ScrollPane {
 
     private AnimationTimer countdownAnimation;
     private Timeline messageDelay;
+    private Timeline startupAnimation;
+    private Timeline activityAnimation;
     private Consumer<Integer> onEventResponse;
     private boolean initializing = true;
     private boolean displayingMessage;
@@ -84,7 +86,7 @@ public class MissionLogPane extends ScrollPane {
         addEntry("NEXT STEP: Press Launch to begin.");
         animateStartup();
 
-        Timeline activityAnimation = new Timeline(
+        activityAnimation = new Timeline(
                 new KeyFrame(Duration.millis(400), e -> {
                     if (ascending && !eventPanel.isVisible()
                             && !initializing && !displayingMessage && pendingMessages.isEmpty()) {
@@ -262,7 +264,7 @@ public class MissionLogPane extends ScrollPane {
     private void animateStartup() {
         Text startup = createText("> INITIALIZING MISSION CONTROL", Color.WHITE);
         messages.getChildren().add(startup);
-        Timeline animation = new Timeline(
+        startupAnimation = new Timeline(
                 new KeyFrame(Duration.millis(300), e -> startup.setText("> INITIALIZING MISSION CONTROL.")),
                 new KeyFrame(Duration.millis(600), e -> startup.setText("> INITIALIZING MISSION CONTROL..")),
                 new KeyFrame(Duration.millis(900), e -> startup.setText("> INITIALIZING MISSION CONTROL...")),
@@ -273,7 +275,27 @@ public class MissionLogPane extends ScrollPane {
                     showNextMessage();
                 })
         );
-        animation.play();
+        startupAnimation.play();
+    }
+
+    /** Release running timelines before replacing the entire mission screen. */
+    public void dispose() {
+        setAscending(false);
+        hideEventPrompt();
+        if (messageDelay != null) {
+            messageDelay.stop();
+            messageDelay = null;
+        }
+        if (startupAnimation != null) {
+            startupAnimation.stop();
+            startupAnimation = null;
+        }
+        if (activityAnimation != null) {
+            activityAnimation.stop();
+            activityAnimation = null;
+        }
+        displayingMessage = false;
+        pendingMessages.clear();
     }
 
     public void addEntry(String message) {
@@ -286,7 +308,7 @@ public class MissionLogPane extends ScrollPane {
         showNextMessage();
     }
 
-    // display time-critical outcome explanations without the line-animation delay
+
     public void addImmediateEntry(String message) {
         if (!Platform.isFxApplicationThread()) {
             Platform.runLater(() -> addImmediateEntry(message));

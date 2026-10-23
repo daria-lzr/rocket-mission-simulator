@@ -45,6 +45,17 @@ public class SimulationPane extends Pane {
         successOverlay.prefHeightProperty().bind(heightProperty());
     }
 
+
+    public void setOnRestart(Runnable action) {
+        failureOverlay.setOnRestart(action);
+        successOverlay.setOnRestart(action);
+    }
+
+    public void setOnExit(Runnable action) {
+        failureOverlay.setOnExit(action);
+        successOverlay.setOnExit(action);
+    }
+
     public void playIgnition(Runnable onFinished) {
         flightView.playIgnition(onFinished);
     }

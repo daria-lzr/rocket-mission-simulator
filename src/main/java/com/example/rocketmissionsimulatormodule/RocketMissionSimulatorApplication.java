@@ -20,6 +20,10 @@ public class RocketMissionSimulatorApplication extends Application {
 
     @Override
     public void start(Stage stage) {
+        createMissionScreen(stage);
+    }
+
+    private void createMissionScreen(Stage stage) {
         Mission mission = new Mission();
         MissionPane missionPane = new MissionPane(mission);
         TelemetryPane telemetryPane = new TelemetryPane();
@@ -41,14 +45,21 @@ public class RocketMissionSimulatorApplication extends Application {
 
         missionLogPane.setOnEventResponse(missionController::handleEventResponse);
 
-
+        simulationPane.setOnRestart(() -> {
+            missionController.shutdown();
+            createMissionScreen(stage);
+        });
+        simulationPane.setOnExit(() -> {
+            missionController.shutdown();
+            stage.close();
+        });
 
         BorderPane mainPane = new BorderPane();
 
 
 
         ScrollPane rightSidebar = createRightSidebar(missionPane, telemetryPane);
-        //assemble  main layout
+        //assemble main layout
         mainPane.setCenter(simulationPane);
         mainPane.setRight(rightSidebar);
         mainPane.setBottom(missionLogPane);

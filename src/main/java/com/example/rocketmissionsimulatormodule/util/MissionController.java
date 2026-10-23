@@ -135,8 +135,8 @@ public class MissionController {
 
         ignitionStarted = true;
         missionLogPane.addEntry("IGNITION: Raptor-inspired engine startup initiated.");
-        // Only start the physics clock once the three-second visual ignition
-        // finishes. The callback executes on the JavaFX application thread.
+        // only start the physics clock once the three-second visual ignition finishes
+        // the callback executes on the JavaFX application thread
         simulationPane.playIgnition(() -> {
             if (mission.getCurrentState() != Mission.MissionState.ASCENT) {
                 simulationPane.stopEngines();
@@ -161,7 +161,8 @@ public class MissionController {
     public void shutdown() {
         stopSimulation();
         simulationPane.dispose();
-        executor.shutdown();
+        missionLogPane.dispose();
+        executor.shutdownNow();
     }
 
 
@@ -202,7 +203,7 @@ public class MissionController {
         }
     }
 
-    // trigger each event once during ascent. Never overlap emergency prompts.
+
     private void checkMissionEvents(double altitude) {
         if (eventPending || mission.getCurrentState() != Mission.MissionState.ASCENT) {
             return;
@@ -227,7 +228,7 @@ public class MissionController {
             return;
         }
 
-        // set this on  simulation thread to prevent duplicate event scheduling
+        // set this on simulation thread to prevent duplicate event scheduling
         eventPending = true;
         Platform.runLater(() -> {
             if (mission.getCurrentState() != Mission.MissionState.ASCENT) {
@@ -302,7 +303,6 @@ public class MissionController {
 
     private void handleAerodynamicStressResponse(int selectedIndex) {
         if (selectedIndex == 1) {
-            // A real throttle reduction, not just a cosmetic choice.
             missionLogPane.addEntry("RECOVERY: Throttle reduced to limit aerodynamic stress.");
             reduceEngineThrottle();
             simulationPane.showMaxQRecoveryNotification();
@@ -340,8 +340,7 @@ public class MissionController {
         schedulePropellantInstabilityFailure();
     }
 
-    // the backup RCS is the only viable option: guidance is online and
-    // the main engine is already shut down during the high-altitude coast
+
     private void handleAttitudeControlResponse(int selectedIndex) {
         if (selectedIndex == 2) {
             missionLogPane.addEntry(
@@ -363,7 +362,7 @@ public class MissionController {
     }
 
     private void scheduleAttitudeControlFailure() {
-        // show  diagnosis before transitioning to mission failure
+        // show diagnosis before transitioning to mission failure
         PauseTransition delay = new PauseTransition(Duration.seconds(1.5));
         delay.setOnFinished(event -> {
             if (mission.getCurrentState() == Mission.MissionState.ASCENT) {
@@ -395,7 +394,6 @@ public class MissionController {
     }
 
     private void scheduleAerodynamicFailure() {
-        // keep the explanation readable briefly before the failure animation
         PauseTransition delay = new PauseTransition(Duration.seconds(1.5));
         delay.setOnFinished(event -> {
             if (mission.getCurrentState() == Mission.MissionState.ASCENT) {
